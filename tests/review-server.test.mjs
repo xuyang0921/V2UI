@@ -33,7 +33,7 @@ test("review companion serves demo and saves a local structured package", async 
   const project = await mkdtemp(join(tmpdir(), "v2ui-smoke-"));
   const port = await availablePort();
   const origin = `http://127.0.0.1:${port}`;
-  const child = spawn(process.execPath, [join(root, "scripts/review-server.mjs"), "--project", project, "--port", String(port)], { stdio: "ignore", env: { ...process.env, V2UI_EXTENSION_INSTALL_URL: "https://chromewebstore.google.com/detail/v2ui/example" } });
+  const child = spawn(process.execPath, [join(root, "scripts/review-server.mjs"), "--project", project, "--port", String(port)], { stdio: "ignore", env: { ...process.env, V2UI_BINDING_TOKEN: "test-binding-token", V2UI_EXTENSION_INSTALL_URL: "https://chromewebstore.google.com/detail/v2ui/example" } });
   context.after(async () => {
     child.kill("SIGTERM");
     await new Promise((resolveExit) => child.once("exit", resolveExit));
@@ -47,6 +47,14 @@ test("review companion serves demo and saves a local structured package", async 
   const setup = await (await fetch(`${origin}/setup`)).text();
   assert.match(setup, /从 Chrome Web Store 安装/);
   assert.equal(setup.includes("chrome://extensions"), false);
+  const bindingResponse = await fetch(`${origin}/binding`, {
+    method: "POST",
+    headers: { "content-type": "application/json", "x-v2ui-binding-token": "test-binding-token" },
+    body: JSON.stringify({ threadId: "desktop-thread-1" }),
+  });
+  const binding = await bindingResponse.json();
+  assert.equal(binding.codexDelivery.configured, false);
+  assert.match(binding.codexDelivery.reason, /active writer/);
 
   const payload = {
     sessionId: "v2ui-smoke-0001",
@@ -80,6 +88,7 @@ test("review companion invokes the Codex bridge with supported read-only argumen
     env: {
       ...process.env,
       V2UI_BINDING_TOKEN: "test-binding-token",
+      V2UI_ENABLE_CODEX_RESUME: "1",
       V2UI_CODEX_COMMAND: fakeCodex,
       V2UI_TEST_CAPTURE: capturePath,
     },

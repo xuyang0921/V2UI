@@ -26,8 +26,10 @@ const extensionInstallUrl = (() => {
 })();
 const MAX_BODY_BYTES = 120 * 1024 * 1024;
 const activeClients = new Map();
-let codexThreadId = process.env.V2UI_CODEX_THREAD_ID || null;
-let codexDeliveryReason = codexThreadId ? null : "missing-thread-id";
+const automaticCodexDeliveryEnabled = process.env.V2UI_ENABLE_CODEX_RESUME === "1";
+const activeTaskCallbackReason = "Codex Desktop does not accept an external resume while the current task has an active writer; use the saved-review return flow.";
+let codexThreadId = automaticCodexDeliveryEnabled ? process.env.V2UI_CODEX_THREAD_ID || null : null;
+let codexDeliveryReason = !automaticCodexDeliveryEnabled && process.env.V2UI_CODEX_THREAD_ID ? activeTaskCallbackReason : codexThreadId ? null : "missing-thread-id";
 const bindingToken = process.env.V2UI_BINDING_TOKEN || await readFile(join(runtimeRoot, "binding-token"), "utf8").then((value) => value.trim()).catch(() => null);
 
 await stat(projectRoot).catch(() => {
@@ -157,6 +159,11 @@ const server = http.createServer(async (request, response) => {
       const input = await readJson(request);
       if (input.threadId != null && (typeof input.threadId !== "string" || !/^[a-zA-Z0-9_-]{8,160}$/.test(input.threadId))) throw new Error("Invalid Codex thread id.");
       const candidate = input.threadId || null;
+      if (candidate && !automaticCodexDeliveryEnabled) {
+        codexThreadId = null;
+        codexDeliveryReason = activeTaskCallbackReason;
+        return send(response, 200, { ok: true, codexDelivery: { configured: false, reason: codexDeliveryReason } });
+      }
       const probe = await probeCodexThread(candidate, { projectRoot });
       codexThreadId = probe.available ? candidate : null;
       codexDeliveryReason = probe.reason;
@@ -247,8 +254,12 @@ const server = http.createServer(async (request, response) => {
       const manifestPath = join(sessionRoot, "manifest.json");
       await writeFile(manifestPath, `${JSON.stringify(finalized, null, 2)}\n`, "utf8");
       if (codexThreadId) {
-        const codex = await sendReviewToCodex({ projectRoot, threadId: codexThreadId, manifest: finalized, manifestPath });
-        return send(response, 201, { ok: true, sessionId, sessionRoot, manifestPath, codex });
+        try {
+          const codex = await sendReviewToCodex({ projectRoot, threadId: codexThreadId, manifest: finalized, manifestPath });
+          return send(response, 201, { ok: true, sessionId, sessionRoot, manifestPath, codex });
+        } catch (error) {
+          return send(response, 201, { ok: true, sessionId, sessionRoot, manifestPath, codex: { delivered: false, reason: error instanceof Error ? error.message : String(error) } });
+        }
       }
       return send(response, 201, { ok: true, sessionId, sessionRoot, manifestPath, codex: { delivered: false, reason: "no-codex-task-binding" } });
     }

@@ -14,12 +14,11 @@ node <plugin-root>/scripts/start-v2ui.mjs --project "$PWD" --preview "http://127
 After setup, click the V2UI browser action on a `localhost` or `127.0.0.1`
 preview to toggle the review overlay.
 
-When the launcher is run from a Codex task, the companion binds both Chrome and
-the sidebar-browser surface to that task. The action button becomes **确认调整**:
-it saves the local review package, resumes the bound task in read-only mode, and
-asks Codex to summarize scope and wait for explicit confirmation. If Chrome is
-started without a Codex task binding, the button remains **发送建议** and keeps the
-manual return-to-chat flow.
+Codex Desktop keeps an exclusive writer for the open task, so an external
+`codex exec resume` cannot safely inject a callback into that same task. The
+sidebar action therefore becomes **保存并返回 Codex**: it saves the package and
+copies a prompt that asks the current task to read the latest review. Independent
+Chrome usage keeps **发送建议** and the same manual return-to-chat flow.
 
 The same overlay also runs in the Codex built-in sidebar browser through the
 development-server adapter in `../adapters/vite.mjs`; that mode does not use a

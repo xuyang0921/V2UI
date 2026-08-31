@@ -116,7 +116,7 @@
     showToast.timer = window.setTimeout(() => toast.classList.remove("show"), duration);
   }
 
-  const sendLabel = () => state.codexDeliveryConfigured ? "确认调整" : "发送建议";
+  const sendLabel = () => state.codexDeliveryConfigured ? "确认调整" : SURFACE === "codex" ? "保存并返回 Codex" : "发送建议";
   function markDirty() { state.sent = false; sendButton.disabled = false; sendButton.textContent = sendLabel(); updateControls(); }
 
   function selectorFor(element) {
@@ -391,9 +391,9 @@
       const response = await fetch(`${SERVER_ORIGIN}/session`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) }); const result = await response.json();
       if (!response.ok) throw new Error(result.error || "发送失败");
       if (!result.codex?.delivered) {
-        try { await navigator.clipboard.writeText("V2UI 调整建议已发送。请先概括收到的建议并询问我是否确认执行；得到确认后再修改代码。"); } catch {}
+        try { await navigator.clipboard.writeText("请读取当前项目最新的 V2UI 评审，先概括建议与可能影响范围并等待我确认；在我明确确认前不要修改代码。"); } catch {}
       }
-      resetRound(); showToast(result.codex?.delivered ? "修改建议已发到绑定的 Codex 对话，请回到对话中确认是否执行。" : "建议已保存。本轮内容已清空，请回到 Codex 对话并确认已发送。", 7600);
+      resetRound(); showToast(result.codex?.delivered ? "修改建议已发到绑定的 Codex 对话，请回到对话中确认是否执行。" : "建议已保存。当前 Codex 不支持向正在打开的任务自动回调；请回到任务粘贴已复制的读取提示。", 9000);
     } catch (error) { sendButton.disabled = false; sendButton.textContent = "重新发送"; showToast(`发送失败：${error.message}。请确认 V2UI 本地服务仍在运行。`, 9000); }
   }
 

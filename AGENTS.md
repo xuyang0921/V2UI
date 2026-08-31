@@ -7,7 +7,7 @@
 - V2UI 只审阅本地预览，不是通用网页编辑器。
 - 浏览与 Select/Pen 标注分离。
 - DOM 选择是证据，不自动授权更改共享组件、token、响应式规则或全局样式。
-- “确认调整”通过 `codex exec -s read-only resume` 回传；发送建议不授权写代码。Codex 必须先总结影响范围并等待明确确认。
+- Codex Desktop 正在打开的任务有独占 writer，不能由外部 `codex exec resume` 回调。默认流程保存评审并引导用户回到任务读取；实验性 resume 也必须只读。发送建议不授权写代码，Codex 必须先总结影响范围并等待明确确认。
 - Chrome 保持 Manifest V3、`activeTab` 和 `scripting`，host 仅限 `localhost` 与 `127.0.0.1`。
 - 屏幕与麦克风权限只在用户开始评审后申请；实时转录失败不能阻断录音或提交。
 - 所有会话数据只能写入被审项目的 `.codex/v2ui-reviews`；onboarding 与运行日志写入被审项目的 `.codex/v2ui`。

@@ -12,8 +12,8 @@ Turn a live local preview review into scoped, verified code changes. The review 
 - This is for a local web preview the user is authorized to edit.
 - A runtime DOM selection is evidence, not a source-code scope. Before writing, resolve whether it maps to an instance, loop item, shared component, token, responsive rule, or global style.
 - V2UI saves review recordings under the active project's `.codex/v2ui-reviews/` directory and does not upload them to a V2UI-operated service. Browser live speech recognition may process audio under the browser vendor's policy; keep recording as the independent local evidence path.
-- In Codex-browser mode, the companion binds to the task that started it. Clicking **确认调整** saves the package and starts a turn in that same task containing the numbered suggestions; Codex must summarize them and wait for explicit execution confirmation. If the companion was not launched from a Codex task, report that automatic delivery is unavailable instead of claiming success.
-- In Chrome mode, use the same automatic delivery when the companion is bound to a Codex task. If Chrome was started independently and no task binding exists, keep the local-save flow: the button reads **发送建议**, and the user returns to the chat manually.
+- In Codex-browser mode, clicking **保存并返回 Codex** saves the package and copies a prompt asking the current task to read the latest review. Codex Desktop keeps an active writer for the open task, so do not claim an external `codex exec resume` can inject a callback into that same task.
+- In Chrome mode, keep the local-save flow: the button reads **发送建议**, and the user returns to the chat manually. Experimental CLI resume may only be enabled explicitly and must never make a successfully saved package look failed.
 - If browser permissions, speech recognition, or screen capture are unavailable, preserve any available drawing and DOM targets; state which evidence is missing.
 - Live speech transcription is best-effort, but microphone recording is a required independent path. A review with saved audio and no live transcript must still be sendable. When the manifest marks `transcription.requiresPostProcessing`, transcribe the referenced recording files in the bound Codex task before summarizing the suggestions; never infer speech from annotations alone.
 - Sending suggestions does not authorize code changes. Summarize the received suggestions in the current chat and ask the user to confirm before editing.
@@ -24,7 +24,7 @@ Resolve `<v2ui-runtime-root>` before running commands. For a full plugin install
 
 1. Resolve the local preview URL. If the app is not running, start its existing development command yourself and keep it running.
 2. Resolve the requested surface. Use `codex` when the user asks for the built-in sidebar browser, and `chrome` when they ask for Chrome. If they do not specify, prefer the Codex built-in browser when available.
-   When automatic task delivery is required from a sandboxed Codex task, ensure the launcher and companion can use the local Codex runtime before starting them: request localhost network access and write access to `CODEX_HOME` (normally `~/.codex`). The CLI updates its SQLite state, including WAL/SHM files, and initializes the local app-server even though the resumed turn itself uses a read-only sandbox. A companion started before permission is granted does not inherit it; start a fresh companion afterward. Do not read or copy plugin caches as part of this permission step.
+   Do not request `CODEX_HOME` write access for the default saved-review flow. An experimental CLI resume requires localhost network access and write access to `CODEX_HOME`, but still cannot resume a task held by an active Codex Desktop writer.
 3. For Codex-browser mode in a Vite project, ensure the V2UI development adapter is installed once:
 
    ```bash
@@ -39,10 +39,10 @@ Resolve `<v2ui-runtime-root>` before running commands. For a full plugin install
    ```
 
    The launcher starts or reuses the companion at `http://127.0.0.1:47831` and prints a target URL. In `codex` mode, open that URL in the built-in browser; the adapter loads the overlay automatically. In `chrome` mode, open it in Chrome; first use may route through extension onboarding. Keep the companion alive.
-   The launcher performs a non-delivering Codex capability probe. If it prints `codex-delivery=manual`, report the printed reason and use the manual return-to-chat flow; do not claim that **确认调整** can start a task turn.
+   The launcher prints `codex-delivery=manual` for the supported Desktop flow. Use the saved-review return-to-chat flow; do not claim the button can start a task turn.
 5. In Chrome mode, ask the user to click the **V2UI** browser action. In Codex mode, confirm the overlay is already visible; do not ask for a Chrome extension. For a permission-free visual smoke test, open `http://127.0.0.1:47831/demo` instead.
 6. Tell the user the overlay is open. Its single green play button starts or resumes review; while recording it becomes a pause icon. The user grants screen and microphone access, browses the real page, selects components or draws in red while speaking, then pauses review. A later play resumes and appends another recording segment without losing earlier suggestions. If live speech recognition is unavailable, the overlay must continue recording and explain that Codex will transcribe the saved audio after confirmation.
-7. The user reviews the numbered suggestions and deletes any unwanted item. When a Codex task binding is available, both surfaces show **确认调整** and post the review into that task automatically. Without a binding, the button reads **发送建议** and preserves the manual return-to-chat flow. Do not interact with the page while the user is reviewing.
+7. The user reviews the numbered suggestions and deletes any unwanted item. Codex mode shows **保存并返回 Codex**; after saving, the user returns to the task and sends the copied prompt. Chrome shows **发送建议** and uses the same manual return flow. Do not interact with the page while the user is reviewing.
 
 ## Apply a completed review
 

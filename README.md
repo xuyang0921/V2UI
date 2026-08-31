@@ -32,7 +32,7 @@ node /absolute/path/to/v2ui/scripts/install-vite-adapter.mjs --project "$PWD"
 - Browse 用于正常滚动和检查页面；Select 与 Pen 才进入标注。
 - 每个新视觉标记开启一条新的语音建议；同一段话中的短暂停顿继续合并到当前建议。
 - 暂停后可以再次播放并追加新的录音段，不丢失已有建议。
-- 有 Codex task 绑定时按钮为“确认调整”，评审以只读 turn 返回原 task；未绑定的独立 Chrome 流程显示“发送建议”。
+- Codex 内置浏览器显示“保存并返回 Codex”：评审先可靠保存，再复制一条读取提示，用户回到当前 task 粘贴发送。Codex Desktop 目前不允许外部进程向正在打开、持有 writer 的同一 task 自动回调。
 - 发送只代表保存并交付建议，不代表授权修改代码。Codex 必须先总结每项影响范围并等待明确确认。
 - 发送成功后清空本轮建议、标记、录音与计时，开始新一轮。
 
