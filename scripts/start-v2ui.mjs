@@ -91,6 +91,7 @@ const bindingResponse = await fetch(`${origin}/binding`, {
   body: JSON.stringify({ threadId: process.env.CODEX_THREAD_ID || null }),
 });
 if (!bindingResponse.ok) throw new Error(`V2UI could not bind the companion to the current Codex task (${bindingResponse.status}).`);
+const binding = await bindingResponse.json();
 companion = await health();
 
 const onboardingResponse = await fetch(`${origin}/onboarding`);
@@ -101,4 +102,5 @@ if (shouldOpen && mode === "chrome") openBrowser(targetUrl);
 console.log(`V2UI_START_READY ${targetUrl}`);
 console.log(`mode=${mode} companion=${reused ? "reused" : "started"} project=${projectRoot} onboarding=${mode === "codex" || onboarding.completed ? "complete" : "required"}`);
 console.log(`codex-delivery=${companion.codexDelivery?.configured ? "automatic" : "manual"}`);
+if (!companion.codexDelivery?.configured && binding.codexDelivery?.reason) console.log(`codex-delivery-reason=${String(binding.codexDelivery.reason).replace(/\s+/g, " ").slice(0, 500)}`);
 if (shouldOpen && mode === "codex") console.log("Open the printed URL in the Codex built-in browser.");

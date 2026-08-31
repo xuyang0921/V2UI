@@ -27,6 +27,7 @@ const extensionInstallUrl = (() => {
 const MAX_BODY_BYTES = 120 * 1024 * 1024;
 const activeClients = new Map();
 let codexThreadId = process.env.V2UI_CODEX_THREAD_ID || null;
+let codexDeliveryReason = codexThreadId ? null : "missing-thread-id";
 const bindingToken = process.env.V2UI_BINDING_TOKEN || await readFile(join(runtimeRoot, "binding-token"), "utf8").then((value) => value.trim()).catch(() => null);
 
 await stat(projectRoot).catch(() => {
@@ -150,14 +151,15 @@ const server = http.createServer(async (request, response) => {
   try {
     if (request.method === "OPTIONS") return send(response, 204, "", "text/plain");
     const requestUrl = new URL(request.url, `http://127.0.0.1:${port}`);
-    if (request.method === "GET" && requestUrl.pathname === "/health") return send(response, 200, { ok: true, projectRoot, reviewsRoot, extensionRoot, extensionInstallUrl, codexDelivery: { configured: Boolean(codexThreadId) }, clients: currentClients() });
+    if (request.method === "GET" && requestUrl.pathname === "/health") return send(response, 200, { ok: true, projectRoot, reviewsRoot, extensionRoot, extensionInstallUrl, codexDelivery: { configured: Boolean(codexThreadId), reason: codexDeliveryReason }, clients: currentClients() });
     if (request.method === "POST" && requestUrl.pathname === "/binding") {
       if (!bindingToken || request.headers["x-v2ui-binding-token"] !== bindingToken) throw new Error("Unauthorized V2UI task binding request.");
       const input = await readJson(request);
       if (input.threadId != null && (typeof input.threadId !== "string" || !/^[a-zA-Z0-9_-]{8,160}$/.test(input.threadId))) throw new Error("Invalid Codex thread id.");
       const candidate = input.threadId || null;
-      const probe = await probeCodexThread(candidate);
+      const probe = await probeCodexThread(candidate, { projectRoot });
       codexThreadId = probe.available ? candidate : null;
+      codexDeliveryReason = probe.reason;
       return send(response, 200, { ok: true, codexDelivery: { configured: Boolean(codexThreadId), reason: probe.reason } });
     }
     if (request.method === "POST" && requestUrl.pathname === "/client") {
@@ -167,7 +169,7 @@ const server = http.createServer(async (request, response) => {
       const surface = ["chrome", "codex"].includes(input.surface) ? input.surface : "unknown";
       const client = { id: `${surface}:${pageUrl}`, surface, pageUrl, lastSeenAt: Date.now() };
       activeClients.set(client.id, client);
-      return send(response, 200, { ok: true, client, codexDelivery: { configured: Boolean(codexThreadId) } });
+      return send(response, 200, { ok: true, client, codexDelivery: { configured: Boolean(codexThreadId), reason: codexDeliveryReason } });
     }
     if (request.method === "GET" && requestUrl.pathname === "/onboarding") return send(response, 200, { ...(await readOnboarding()), extensionRoot, extensionInstallUrl, projectRoot });
     if (request.method === "GET" && requestUrl.pathname === "/setup") return send(response, 200, setupPage(requestUrl.searchParams.get("preview")), "text/html; charset=utf-8");

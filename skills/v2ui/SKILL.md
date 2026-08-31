@@ -24,6 +24,7 @@ Resolve `<v2ui-runtime-root>` before running commands. For a full plugin install
 
 1. Resolve the local preview URL. If the app is not running, start its existing development command yourself and keep it running.
 2. Resolve the requested surface. Use `codex` when the user asks for the built-in sidebar browser, and `chrome` when they ask for Chrome. If they do not specify, prefer the Codex built-in browser when available.
+   When automatic task delivery is required from a sandboxed Codex task, ensure the launcher and companion can use the local Codex runtime before starting them: request localhost network access and write access to `CODEX_HOME` (normally `~/.codex`). The CLI updates its SQLite state, including WAL/SHM files, and initializes the local app-server even though the resumed turn itself uses a read-only sandbox. A companion started before permission is granted does not inherit it; start a fresh companion afterward. Do not read or copy plugin caches as part of this permission step.
 3. For Codex-browser mode in a Vite project, ensure the V2UI development adapter is installed once:
 
    ```bash
@@ -38,6 +39,7 @@ Resolve `<v2ui-runtime-root>` before running commands. For a full plugin install
    ```
 
    The launcher starts or reuses the companion at `http://127.0.0.1:47831` and prints a target URL. In `codex` mode, open that URL in the built-in browser; the adapter loads the overlay automatically. In `chrome` mode, open it in Chrome; first use may route through extension onboarding. Keep the companion alive.
+   The launcher performs a non-delivering Codex capability probe. If it prints `codex-delivery=manual`, report the printed reason and use the manual return-to-chat flow; do not claim that **确认调整** can start a task turn.
 5. In Chrome mode, ask the user to click the **V2UI** browser action. In Codex mode, confirm the overlay is already visible; do not ask for a Chrome extension. For a permission-free visual smoke test, open `http://127.0.0.1:47831/demo` instead.
 6. Tell the user the overlay is open. Its single green play button starts or resumes review; while recording it becomes a pause icon. The user grants screen and microphone access, browses the real page, selects components or draws in red while speaking, then pauses review. A later play resumes and appends another recording segment without losing earlier suggestions. If live speech recognition is unavailable, the overlay must continue recording and explain that Codex will transcribe the saved audio after confirmation.
 7. The user reviews the numbered suggestions and deletes any unwanted item. When a Codex task binding is available, both surfaces show **确认调整** and post the review into that task automatically. Without a binding, the button reads **发送建议** and preserves the manual return-to-chat flow. Do not interact with the page while the user is reviewing.

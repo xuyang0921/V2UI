@@ -3,6 +3,7 @@ import { closeSync, mkdirSync, openSync } from "node:fs";
 import { dirname, join } from "node:path";
 
 const MAX_MESSAGE_CHARS = 24000;
+const CAPABILITY_PROBE_THREAD_ID = "00000000-0000-0000-0000-000000000000";
 
 function bridgeError(message, details = "") {
   const suffix = details.trim() ? ` ${details.trim()}` : "";
@@ -57,11 +58,21 @@ export function createCodexResumeInvocation({ command = "codex", projectRoot, th
   };
 }
 
-export async function probeCodexThread(threadId, { command = process.env.V2UI_CODEX_COMMAND || "codex" } = {}) {
+export async function probeCodexThread(threadId, { command = process.env.V2UI_CODEX_COMMAND || "codex", projectRoot = process.cwd() } = {}) {
   if (!threadId) return { available: false, reason: "missing-thread-id" };
-  const result = spawnSync(command, ["exec", "resume", "--help"], { encoding: "utf8", timeout: 3000 });
+  const result = spawnSync(command, [
+    "exec",
+    "--ephemeral",
+    "-C", projectRoot,
+    "-s", "read-only",
+    "--skip-git-repo-check",
+    "resume",
+    CAPABILITY_PROBE_THREAD_ID,
+    "V2UI delivery capability probe",
+  ], { encoding: "utf8", timeout: 6000 });
   if (result.error) return { available: false, reason: result.error.message };
-  if (result.status !== 0) return { available: false, reason: String(result.stderr || "Codex resume command unavailable").trim() };
+  const output = `${result.stdout || ""}\n${result.stderr || ""}`.trim();
+  if (result.status !== 0 && !/no rollout found for thread id/i.test(output)) return { available: false, reason: output || "Codex resume command unavailable" };
   return { available: true, reason: null };
 }
 

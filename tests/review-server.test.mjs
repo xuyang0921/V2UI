@@ -79,7 +79,7 @@ test("review companion invokes the Codex bridge with supported read-only argumen
     stdio: "ignore",
     env: {
       ...process.env,
-      V2UI_CODEX_THREAD_ID: "thread-1",
+      V2UI_BINDING_TOKEN: "test-binding-token",
       V2UI_CODEX_COMMAND: fakeCodex,
       V2UI_TEST_CAPTURE: capturePath,
     },
@@ -91,6 +91,13 @@ test("review companion invokes the Codex bridge with supported read-only argumen
   });
 
   await waitForHealth(origin);
+  const bindingResponse = await fetch(`${origin}/binding`, {
+    method: "POST",
+    headers: { "content-type": "application/json", "x-v2ui-binding-token": "test-binding-token" },
+    body: JSON.stringify({ threadId: "thread-1" }),
+  });
+  assert.equal(bindingResponse.status, 200);
+  assert.equal((await bindingResponse.json()).codexDelivery.configured, true);
   const response = await fetch(`${origin}/session`, {
     method: "POST",
     headers: { "content-type": "application/json" },
