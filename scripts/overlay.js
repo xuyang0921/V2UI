@@ -45,6 +45,7 @@
       .v2-empty{padding:24px 14px;text-align:center;color:#8b8175}.v2-item{position:relative;display:grid;grid-template-columns:22px minmax(0,1fr) 24px;gap:7px;align-items:start;padding:10px 7px;border-radius:10px;transition:background-color .14s ease}
       .v2-item:hover,.v2-item.hovered{background:#fff2d3}.v2-index{display:flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:6px;background:#f7dfaa;color:#6e4d20;font-size:11px;font-variant-numeric:tabular-nums}
       .v2-copy{min-width:0;color:#463d33;overflow-wrap:anywhere}.v2-scope{display:block;margin-top:4px;color:#8a7b69;font-size:10px}
+      .v2-audio-list{display:grid;gap:6px;margin-top:8px}.v2-audio-row{display:grid;grid-template-columns:auto minmax(0,1fr);gap:7px;align-items:center}.v2-audio-row span{color:#8a7b69;font-size:10px;white-space:nowrap}.v2-audio-row audio{width:100%;height:28px;min-width:0}
       .v2-delete{width:24px;height:24px;border:0;border-radius:7px;background:transparent;color:#c65349;opacity:0;display:grid;place-items:center;padding:0}.v2-item:hover .v2-delete,.v2-delete:focus-visible{opacity:1}.v2-delete:hover{background:#fde3dd}.v2-delete svg{width:12px;height:12px}
       .v2-send-wrap{display:none;padding:10px;border-top:1px solid rgba(159,123,64,.13)}.v2-send-wrap.visible{display:block}.v2-send{width:100%;height:36px;border:0;border-radius:9px;background:#e7a343;color:#fff;font-weight:570}.v2-send:hover{background:#d99435}.v2-send:focus-visible{outline:2px solid #d49537;outline-offset:2px}.v2-send:disabled{opacity:.48;cursor:not-allowed}
       .v2-brand{padding:0 3px 0 1px;color:#d99031;font-size:13px;font-style:italic;font-weight:650;letter-spacing:-.02em}
@@ -97,8 +98,8 @@
     sessionId: `v2ui-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     reviewStartedAt: performance.now(), recordingStartedAt: null, recordedMs: 0, tool: "browse", drawing: null,
     annotations: [], targets: [], suggestions: [], activeTargetId: null, pendingTargetIds: [], pendingAnnotationIds: [], activeSpeechSuggestionId: null, history: [],
-    mediaRecorder: null, mediaChunks: [], streams: [], recognition: null, recognitionRestart: false, recognitionRestartTimer: null, recognitionRetryCount: 0, recognitionErrors: [], speechDraft: "", speechTimer: null, timer: null,
-    recordingSegments: [], starting: false, ending: false, hasEnded: false,
+    mediaRecorder: null, mediaChunks: [], streams: [], recognition: null, recognitionRestart: false, recognitionRestartTimer: null, recognitionRetryCount: 0, recognitionErrors: [], speechDraft: "", speechInterim: "", acceptSpeechResults: false, speechTimer: null, timer: null,
+    recordingSegments: [], currentRecordingId: null, currentRecordingStartedAtMs: 0, audioBoundaryMs: 0, starting: false, ending: false, hasEnded: false,
     permissionStatus: { screen: "not-requested", microphone: "not-requested", audioRecording: "not-requested", speechRecognition: "not-requested" }, transcriptionStatus: "not-started", fallbackToastShown: false, highlightedSuggestionId: null, sent: false, codexDeliveryConfigured: false,
   };
 
@@ -110,6 +111,16 @@
   const hasSavedRecording = () => state.recordingSegments.length > 0;
   const hasReviewEvidence = () => state.suggestions.length > 0 || state.annotations.length > 0 || state.targets.length > 0 || hasSavedRecording();
   const needsCodexTranscription = () => hasSavedRecording() && (state.transcriptionStatus === "deferred" || state.suggestions.length === 0);
+  const cleanSpeech = (text) => String(text || "").trim().replace(/\s+/g, " ");
+
+  function revokeRecording(segment) {
+    if (segment?.objectUrl) URL.revokeObjectURL(segment.objectUrl);
+  }
+
+  function clearRecordingSegments() {
+    state.recordingSegments.forEach(revokeRecording);
+    state.recordingSegments = [];
+  }
 
   function showToast(message, duration = 3200) {
     toast.classList.remove("intro"); toast.textContent = message; toast.classList.add("show"); window.clearTimeout(showToast.timer);
@@ -194,6 +205,7 @@
 
   function deleteSuggestion(suggestionId) {
     const suggestion = state.suggestions.find((item) => item.id === suggestionId); if (!suggestion) return;
+    const removedRecordingIds = new Set(suggestion.recordingIds || []);
     state.suggestions = state.suggestions.filter((item) => item.id !== suggestionId);
     if (state.activeSpeechSuggestionId === suggestionId) state.activeSpeechSuggestionId = null;
     const remainingTargetIds = new Set(state.suggestions.flatMap((item) => item.targetIds)); const remainingAnnotationIds = new Set(state.suggestions.flatMap((item) => item.annotationIds));
@@ -201,6 +213,8 @@
     state.targets = state.targets.filter((item) => !suggestion.targetIds.includes(item.id) || remainingTargetIds.has(item.id) || state.pendingTargetIds.includes(item.id));
     if (!state.targets.some((item) => item.id === state.activeTargetId)) state.activeTargetId = null;
     state.history = state.history.filter((entry) => state.targets.some((item) => item.id === entry.id) || state.annotations.some((item) => item.id === entry.id));
+    const remainingRecordingIds = new Set(state.suggestions.flatMap((item) => item.recordingIds || []));
+    state.recordingSegments = state.recordingSegments.filter((segment) => { const keep = !removedRecordingIds.has(segment.id) || remainingRecordingIds.has(segment.id); if (!keep) revokeRecording(segment); return keep; });
     state.highlightedSuggestionId = null; markDirty(); renderAll();
   }
 
@@ -214,8 +228,24 @@
       const item = document.createElement("div"); item.className = "v2-item"; item.dataset.suggestionId = suggestion.id;
       item.innerHTML = `<span class="v2-index"></span><div class="v2-copy"></div><button class="v2-delete" aria-label="删除这条建议" title="删除"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 2l8 8M10 2L2 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>`;
       item.querySelector(".v2-index").textContent = String(index + 1);
-      const copy = item.querySelector(".v2-copy"); copy.textContent = suggestion.text;
+      const copy = item.querySelector(".v2-copy"); copy.textContent = cleanSpeech(`${suggestion.text || ""} ${suggestion.interimText || ""}`) || "录音建议";
       const scope = document.createElement("span"); scope.className = "v2-scope"; scope.textContent = scopeLabel(suggestion); copy.appendChild(scope);
+      const audioRanges = Array.isArray(suggestion.audioRanges) ? suggestion.audioRanges : [];
+      if (audioRanges.length) {
+        const audioList = document.createElement("div"); audioList.className = "v2-audio-list";
+        audioRanges.forEach((range, audioIndex) => {
+          const segment = state.recordingSegments.find((candidate) => candidate.id === range.recordingId); if (!segment?.objectUrl) return;
+          const row = document.createElement("div"); row.className = "v2-audio-row";
+          const label = document.createElement("span"); label.textContent = `语音 ${audioIndex + 1}`;
+          const audio = document.createElement("audio"); audio.controls = true; audio.preload = "metadata"; audio.src = segment.objectUrl;
+          const startSeconds = Math.max(0, Number(range.startMs || 0) / 1000); const endSeconds = Math.max(startSeconds, Number(range.endMs || segment.durationMs) / 1000);
+          audio.addEventListener("loadedmetadata", () => { if (startSeconds > 0) audio.currentTime = startSeconds; }, { once: true });
+          audio.addEventListener("play", () => { if (audio.currentTime < startSeconds || audio.currentTime >= endSeconds) audio.currentTime = startSeconds; });
+          audio.addEventListener("timeupdate", () => { if (!audio.paused && audio.currentTime >= endSeconds) { audio.pause(); audio.currentTime = startSeconds; } });
+          row.addEventListener("click", (event) => event.stopPropagation()); row.append(label, audio); audioList.appendChild(row);
+        });
+        if (audioList.childElementCount) copy.appendChild(audioList);
+      }
       item.addEventListener("mouseenter", () => { state.highlightedSuggestionId = suggestion.id; renderTargets(); renderCanvas(); });
       item.addEventListener("mouseleave", () => { state.highlightedSuggestionId = null; renderTargets(); renderCanvas(); });
       item.addEventListener("click", () => { const target = state.targets.find((candidate) => suggestion.targetIds.includes(candidate.id)); if (target) window.scrollTo({ left: target.scroll.x, top: target.scroll.y, behavior: "smooth" }); });
@@ -283,19 +313,60 @@
     markDirty(); renderAll();
   });
 
-  function addSuggestion(text) {
-    const clean = text.trim().replace(/\s+/g, " "); if (!clean) return;
+  function ensureActiveSuggestion(source = "speech") {
     const activeSuggestion = state.suggestions.find((item) => item.id === state.activeSpeechSuggestionId);
-    if (activeSuggestion) { activeSuggestion.text = `${activeSuggestion.text} ${clean}`.trim(); markDirty(); renderAll(); return; }
+    if (activeSuggestion) return activeSuggestion;
     const targetIds = unique(state.pendingTargetIds.length ? state.pendingTargetIds : state.activeTargetId ? [state.activeTargetId] : []); const annotationIds = unique(state.pendingAnnotationIds);
-    const suggestion = { id: id("suggestion"), t: elapsed(), text: clean, source: "speech", scope: targetIds.length || annotationIds.length ? "selection" : "page", targetIds, annotationIds, scroll: { x: window.scrollX, y: window.scrollY } };
+    const suggestion = { id: id("suggestion"), t: elapsed(), text: "", interimText: "", source, scope: targetIds.length || annotationIds.length ? "selection" : "page", targetIds, annotationIds, recordingIds: [], audioRanges: [], scroll: { x: window.scrollX, y: window.scrollY } };
     state.suggestions.push(suggestion); state.activeSpeechSuggestionId = suggestion.id;
-    state.pendingTargetIds = []; state.pendingAnnotationIds = []; markDirty(); renderAll();
+    state.pendingTargetIds = []; state.pendingAnnotationIds = [];
+    return suggestion;
   }
 
-  function queueSpeech(text) { const clean = text.trim(); if (!clean) return; state.speechDraft = `${state.speechDraft} ${clean}`.trim(); window.clearTimeout(state.speechTimer); state.speechTimer = window.setTimeout(flushSpeech, 1500); }
-  function flushSpeech() { window.clearTimeout(state.speechTimer); if (state.speechDraft) addSuggestion(state.speechDraft); state.speechDraft = ""; }
-  function beginVisual() { flushSpeech(); state.activeSpeechSuggestionId = null; state.pendingTargetIds = []; state.pendingAnnotationIds = []; }
+  function addSuggestion(text) {
+    const clean = cleanSpeech(text); if (!clean) return;
+    const suggestion = ensureActiveSuggestion("speech"); suggestion.source = "speech"; suggestion.text = cleanSpeech(`${suggestion.text} ${clean}`); suggestion.interimText = "";
+    markDirty(); renderAll();
+  }
+
+  function showInterimSuggestion(text) {
+    const clean = cleanSpeech(text); if (!clean) return;
+    const suggestion = ensureActiveSuggestion("speech"); suggestion.source = "speech"; suggestion.interimText = clean;
+    markDirty(); renderAll();
+  }
+
+  function ingestSpeechResult(text, isFinal = true) {
+    if (isFinal) addSuggestion(text); else showInterimSuggestion(text);
+  }
+
+  function queueSpeech(text) { ingestSpeechResult(text, true); }
+  function flushSpeech() {
+    window.clearTimeout(state.speechTimer);
+    const suggestion = state.suggestions.find((item) => item.id === state.activeSpeechSuggestionId);
+    if (suggestion?.interimText) { suggestion.text = cleanSpeech(`${suggestion.text} ${suggestion.interimText}`); suggestion.interimText = ""; }
+    state.speechDraft = ""; state.speechInterim = "";
+  }
+
+  function closeAudioRange(endMs, force = false) {
+    if (SURFACE !== "codex" || !state.currentRecordingId) return;
+    const hasBoundaryEvidence = state.activeSpeechSuggestionId || state.pendingTargetIds.length || state.pendingAnnotationIds.length;
+    if (!hasBoundaryEvidence && !force) { state.audioBoundaryMs = endMs; return; }
+    const suggestion = ensureActiveSuggestion("recording"); suggestion.source = suggestion.source === "speech" ? "speech" : "recording";
+    if (!suggestion.text) suggestion.text = "录音建议";
+    const startMs = Math.max(0, Math.round(state.audioBoundaryMs - state.currentRecordingStartedAtMs));
+    const relativeEndMs = Math.max(startMs, Math.round(endMs - state.currentRecordingStartedAtMs));
+    if (relativeEndMs > startMs) {
+      suggestion.recordingIds = unique([...(suggestion.recordingIds || []), state.currentRecordingId]);
+      suggestion.audioRanges = [...(suggestion.audioRanges || []), { recordingId: state.currentRecordingId, startMs, endMs: relativeEndMs }];
+    }
+    state.audioBoundaryMs = endMs; markDirty(); renderAll();
+  }
+
+  function beginVisual() {
+    flushSpeech();
+    if (state.recordingStartedAt) closeAudioRange(recordingElapsed());
+    state.activeSpeechSuggestionId = null; state.pendingTargetIds = []; state.pendingAnnotationIds = [];
+  }
 
   function deferTranscription(error = "unavailable", notify = true) {
     state.transcriptionStatus = "deferred";
@@ -309,16 +380,27 @@
   }
 
   function startSpeechRecognition() {
+    if (SURFACE === "codex") {
+      state.permissionStatus.speechRecognition = "unsupported:codex-surface";
+      state.transcriptionStatus = "deferred";
+      return false;
+    }
     const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!Recognition) {
       state.permissionStatus.speechRecognition = "unsupported";
       state.transcriptionStatus = "deferred";
       return false;
     }
-    const recognition = new Recognition(); recognition.lang = "zh-CN"; recognition.continuous = true; recognition.interimResults = false;
+    const recognition = new Recognition(); recognition.lang = "zh-CN"; recognition.continuous = true; recognition.interimResults = true;
     recognition.onresult = (event) => {
+      if (!state.acceptSpeechResults) return;
       state.recognitionRetryCount = 0; state.transcriptionStatus = "live"; state.permissionStatus.speechRecognition = "active";
-      for (let index = event.resultIndex; index < event.results.length; index += 1) if (event.results[index].isFinal) queueSpeech(event.results[index][0].transcript);
+      const interim = [];
+      for (let index = event.resultIndex; index < event.results.length; index += 1) {
+        const transcript = event.results[index][0].transcript;
+        if (event.results[index].isFinal) queueSpeech(transcript); else interim.push(transcript);
+      }
+      if (interim.length) ingestSpeechResult(interim.join(" "), false);
     };
     recognition.onerror = (event) => {
       const error = event.error || "unknown"; state.recognitionErrors.push({ t: elapsed(), error });
@@ -352,10 +434,11 @@
       streams.flatMap((stream) => stream.getVideoTracks()).forEach((track) => { track.onended = () => { if (state.recordingStartedAt) endReview(); }; });
     }
     if (state.permissionStatus.audioRecording !== "error") state.permissionStatus.audioRecording = streams.some((stream) => stream.getAudioTracks().length > 0) && state.mediaRecorder ? "active" : "unavailable";
+    state.currentRecordingId = id("recording"); state.currentRecordingStartedAtMs = state.recordedMs; state.audioBoundaryMs = state.recordedMs; state.acceptSpeechResults = true;
     state.recordingStartedAt = performance.now(); state.starting = false; state.timer = window.setInterval(() => { recordTime.textContent = new Date(recordingElapsed()).toISOString().slice(14, 19); }, 250);
     const liveTranscription = startSpeechRecognition(); updateControls();
     if (liveTranscription) showToast("审阅已开始。圈选页面元素或使用红色画笔，再说出调整建议。", 4400);
-    else if (state.permissionStatus.audioRecording === "active") { state.fallbackToastShown = true; showToast("审阅已开始并正在录音；实时转录不可用，确认后将由 Codex 完成转写。", 5600); }
+    else if (state.permissionStatus.audioRecording === "active") { state.fallbackToastShown = true; showToast(SURFACE === "codex" ? "审阅已开始并正在录音；暂停后语音会出现在建议面板中，可直接试听。" : "审阅已开始并正在录音；实时转录不可用，发送后将由 Codex 完成转写。", 5600); }
     else if (tracks.length) showToast("审阅已开始，但未获得可用的麦克风音轨；屏幕和页面标注仍会保留。", 5200);
     else showToast("未获得录屏或录音权限；仍可进行页面标注。", 4400);
   }
@@ -367,25 +450,32 @@
   }
 
   async function endReview() {
-    if (!state.recordingStartedAt || state.ending) return; state.ending = true; recordToggle.disabled = true; flushSpeech(); state.recognitionRestart = false; state.recognition?.stop?.(); window.clearInterval(state.timer);
+    if (!state.recordingStartedAt || state.ending) return; state.ending = true; recordToggle.disabled = true; state.acceptSpeechResults = false; flushSpeech(); state.recognitionRestart = false; state.recognition?.stop?.(); window.clearInterval(state.timer);
     const segmentStartedAt = state.recordedMs; const segmentDuration = performance.now() - state.recordingStartedAt; const blob = await stopRecorder(); state.recordedMs += segmentDuration;
-    if (blob) { state.recordingSegments.push({ id: id("recording"), startedAtMs: Math.round(segmentStartedAt), durationMs: Math.round(segmentDuration), mimeType: blob.type, blob }); if (state.permissionStatus.audioRecording === "active") state.permissionStatus.audioRecording = "saved"; }
+    if (blob) {
+      closeAudioRange(state.recordedMs, true);
+      const segment = { id: state.currentRecordingId || id("recording"), startedAtMs: Math.round(segmentStartedAt), durationMs: Math.round(segmentDuration), mimeType: blob.type, blob, objectUrl: URL.createObjectURL(blob) };
+      state.recordingSegments.push(segment); if (state.permissionStatus.audioRecording === "active") state.permissionStatus.audioRecording = "saved";
+    } else if (state.currentRecordingId) {
+      state.suggestions.forEach((suggestion) => { suggestion.recordingIds = (suggestion.recordingIds || []).filter((recordingId) => recordingId !== state.currentRecordingId); suggestion.audioRanges = (suggestion.audioRanges || []).filter((range) => range.recordingId !== state.currentRecordingId); });
+      state.suggestions = state.suggestions.filter((suggestion) => suggestion.source !== "recording" || suggestion.recordingIds.length);
+    }
     state.streams.forEach((stream) => stream.getTracks().forEach((track) => track.stop())); state.streams = []; state.mediaRecorder = null; state.mediaChunks = []; state.recordingStartedAt = null; state.ending = false; state.hasEnded = true;
-    recordTime.textContent = new Date(state.recordedMs).toISOString().slice(14, 19); updateControls();
-    showToast(state.suggestions.length ? `录制已结束。可以继续开始，或${state.codexDeliveryConfigured ? "确认调整" : "发送现有建议"}。` : hasSavedRecording() ? `录音已保存。${state.codexDeliveryConfigured ? "确认调整" : "发送"}后将由 Codex 完成转写。` : "录制已结束，尚未识别到调整建议。", 4600);
+    state.currentRecordingId = null; recordTime.textContent = new Date(state.recordedMs).toISOString().slice(14, 19); renderAll();
+    showToast(state.suggestions.length ? SURFACE === "codex" ? "录音已加入建议，可立即试听；继续录制会追加到当前标记，创建新标记会开启下一条。" : `录制已结束。可以继续开始，或${state.codexDeliveryConfigured ? "确认调整" : "发送现有建议"}。` : hasSavedRecording() ? `录音已保存。${state.codexDeliveryConfigured ? "确认调整" : "发送"}后将由 Codex 完成转写。` : "录制已结束，尚未识别到调整建议。", 5600);
   }
 
   function blobToBase64(blob) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result).split(",")[1] || ""); reader.onerror = reject; reader.readAsDataURL(blob); }); }
 
   async function sendReview() {
     if (state.recordingStartedAt || !hasReviewEvidence()) return; sendButton.disabled = true; sendButton.textContent = "正在发送…";
-    const recordings = await Promise.all(state.recordingSegments.map(async (segment, index) => ({ id: segment.id, index: index + 1, startedAtMs: segment.startedAtMs, durationMs: segment.durationMs, mimeType: segment.mimeType, base64: await blobToBase64(segment.blob) })));
+    const recordings = await Promise.all(state.recordingSegments.map(async (segment, index) => ({ id: segment.id, index: index + 1, suggestionIds: state.suggestions.filter((suggestion) => (suggestion.recordingIds || []).includes(segment.id)).map((suggestion) => suggestion.id), startedAtMs: segment.startedAtMs, durationMs: segment.durationMs, mimeType: segment.mimeType, base64: await blobToBase64(segment.blob) })));
     const payload = {
       sessionId: state.sessionId, product: "V2UI", surface: SURFACE, createdAt: new Date().toISOString(), durationMs: Math.round(state.recordedMs),
       page: { url: location.href, title: document.title, viewport: { width: innerWidth, height: innerHeight, devicePixelRatio: devicePixelRatio || 1 }, finalScroll: { x: scrollX, y: scrollY } }, permissionStatus: state.permissionStatus,
       targets: state.targets, annotations: state.annotations, suggestions: state.suggestions,
       transcription: { strategy: "browser-live-with-codex-fallback", status: state.transcriptionStatus, requiresPostProcessing: needsCodexTranscription(), recognitionErrors: state.recognitionErrors },
-      transcriptSegments: state.suggestions.map(({ id: suggestionId, t, text, source, targetIds, annotationIds, scope, scroll }) => ({ id: suggestionId, t, text, source, targetIds, annotationIds, scope, scroll })), recordings,
+      transcriptSegments: state.suggestions.map(({ id: suggestionId, t, text, source, targetIds, annotationIds, recordingIds, audioRanges, scope, scroll }) => ({ id: suggestionId, t, text, source, targetIds, annotationIds, recordingIds, audioRanges, scope, scroll })), recordings,
     };
     try {
       const response = await fetch(`${SERVER_ORIGIN}/session`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) }); const result = await response.json();
@@ -408,16 +498,18 @@
 
   function clearAll() {
     state.annotations = []; state.targets = []; state.suggestions = []; state.pendingTargetIds = []; state.pendingAnnotationIds = []; state.activeSpeechSuggestionId = null; state.history = []; state.activeTargetId = null; state.highlightedSuggestionId = null;
+    clearRecordingSegments(); state.audioBoundaryMs = recordingElapsed();
     markDirty(); renderAll();
   }
 
   function resetRound() {
     window.clearInterval(state.timer); window.clearTimeout(state.speechTimer); window.clearTimeout(state.recognitionRestartTimer);
+    clearRecordingSegments();
     state.sessionId = "v2ui-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8);
     state.reviewStartedAt = performance.now(); state.recordingStartedAt = null; state.recordedMs = 0; state.tool = "browse"; state.drawing = null;
     state.annotations = []; state.targets = []; state.suggestions = []; state.activeTargetId = null; state.pendingTargetIds = []; state.pendingAnnotationIds = []; state.activeSpeechSuggestionId = null; state.history = [];
-    state.mediaRecorder = null; state.mediaChunks = []; state.streams = []; state.recognition = null; state.recognitionRestart = false; state.recognitionRestartTimer = null; state.recognitionRetryCount = 0; state.recognitionErrors = []; state.speechDraft = ""; state.speechTimer = null; state.timer = null;
-    state.recordingSegments = []; state.starting = false; state.ending = false; state.hasEnded = false;
+    state.mediaRecorder = null; state.mediaChunks = []; state.streams = []; state.recognition = null; state.recognitionRestart = false; state.recognitionRestartTimer = null; state.recognitionRetryCount = 0; state.recognitionErrors = []; state.speechDraft = ""; state.speechInterim = ""; state.acceptSpeechResults = false; state.speechTimer = null; state.timer = null;
+    state.currentRecordingId = null; state.currentRecordingStartedAtMs = 0; state.audioBoundaryMs = 0; state.starting = false; state.ending = false; state.hasEnded = false;
     state.permissionStatus = { screen: "not-requested", microphone: "not-requested", audioRecording: "not-requested", speechRecognition: "not-requested" }; state.transcriptionStatus = "not-started"; state.fallbackToastShown = false; state.highlightedSuggestionId = null; state.sent = false;
     recordTime.textContent = "00:00"; sendButton.disabled = false; sendButton.textContent = sendLabel(); setTool("browse"); markDirty(); renderAll();
   }
@@ -449,7 +541,7 @@
   }
 
   function destroy() {
-    window.clearInterval(state.timer); window.clearTimeout(state.speechTimer); window.clearTimeout(state.recognitionRestartTimer); state.recognitionRestart = false; state.recognition?.stop?.(); state.streams.forEach((stream) => stream.getTracks().forEach((track) => track.stop())); host.remove(); delete window.__v2ui;
+    window.clearInterval(state.timer); window.clearTimeout(state.speechTimer); window.clearTimeout(state.recognitionRestartTimer); state.recognitionRestart = false; state.recognition?.stop?.(); state.streams.forEach((stream) => stream.getTracks().forEach((track) => track.stop())); clearRecordingSegments(); host.remove(); delete window.__v2ui;
   }
 
   root.querySelectorAll("[data-tool]").forEach((button) => button.addEventListener("click", () => setTool(button.dataset.tool)));
@@ -472,7 +564,7 @@
     renderAll();
   }
 
-  enableDrag(); enablePanelDrag(); resizeCanvas(); setTool("browse"); checkCompanion(); window.__v2ui = { state, surface: SURFACE, destroy, start: startReview, end: endReview, send: sendReview, setTool };
+  enableDrag(); enablePanelDrag(); resizeCanvas(); setTool("browse"); checkCompanion(); window.__v2ui = { state, surface: SURFACE, destroy, start: startReview, end: endReview, send: sendReview, setTool, ingestSpeechResult };
   if (window.__V2UI_DEMO_REVIEW__) seedDemoReview();
   showIntroToast();
 })();

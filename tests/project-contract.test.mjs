@@ -36,6 +36,25 @@ test("final visual and round boundaries are encoded", async () => {
   assert.match(overlay, /recordingSegments/);
 });
 
+test("Chrome streams interim speech into one suggestion until the next visual marker", async () => {
+  const overlay = await readText("browser-extension/overlay.js");
+  assert.match(overlay, /recognition\.interimResults = true/);
+  assert.match(overlay, /ingestSpeechResult\(interim\.join\(" "\), false\)/);
+  assert.match(overlay, /function beginVisual\(\)/);
+  assert.match(overlay, /state\.activeSpeechSuggestionId = null/);
+  assert.doesNotMatch(overlay, /setTimeout\(flushSpeech, 1500\)/);
+});
+
+test("Codex groups playable pause recordings by visual marker", async () => {
+  const overlay = await readText("browser-extension/overlay.js");
+  assert.match(overlay, /SURFACE === "codex"/);
+  assert.match(overlay, /unsupported:codex-surface/);
+  assert.match(overlay, /function closeAudioRange\(endMs, force = false\)/);
+  assert.match(overlay, /suggestion\.audioRanges/);
+  assert.match(overlay, /document\.createElement\("audio"\)/);
+  assert.match(overlay, /语音 \$\{audioIndex \+ 1\}/);
+});
+
 test("Codex handoff is read-only and requires confirmation", async () => {
   const bridge = await readText("scripts/codex-thread-bridge.mjs");
   assert.match(bridge, /"-s", "read-only"/);

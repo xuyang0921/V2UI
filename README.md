@@ -31,6 +31,8 @@ node /absolute/path/to/v2ui/scripts/install-vite-adapter.mjs --project "$PWD"
 
 - Browse 用于正常滚动和检查页面；Select 与 Pen 才进入标注。
 - 每个新视觉标记开启一条新的语音建议；同一段话中的短暂停顿继续合并到当前建议。
+- 外部 Chrome 在录制过程中实时显示 interim/final 转录；无需暂停。同一视觉标记下停顿前后的文字继续合并，创建下一处 Select/Pen 标记才开启新建议。
+- Codex 内置浏览器在每次暂停后显示可试听的录音建议；同一视觉标记跨暂停的录音保留在同一调整项中，以多个播放器呈现。
 - 暂停后可以再次播放并追加新的录音段，不丢失已有建议。
 - Codex 内置浏览器显示“保存并返回 Codex”：评审先可靠保存，再复制一条读取提示，用户回到当前 task 粘贴发送。Codex Desktop 目前不允许外部进程向正在打开、持有 writer 的同一 task 自动回调。
 - 发送只代表保存并交付建议，不代表授权修改代码。Codex 必须先总结每项影响范围并等待明确确认。

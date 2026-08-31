@@ -28,8 +28,9 @@ It intentionally requests only `activeTab`, `scripting`, and local-preview host
 access. Screen and microphone permissions are requested by the overlay only
 after the user clicks **开始录制**.
 
-Live speech transcription is attempted on both Chrome and the Codex built-in
-browser. If the embedded speech service is unavailable, audio recording remains
-active and a recording-only review can still be confirmed. The companion saves
-the audio in the review package and asks the bound Codex task to transcribe it
-before resolving the linked suggestions.
+Live speech transcription is used where the review surface supports it. Chrome
+renders interim and final
+results into the current suggestion while recording; pauses stay in the same
+item until the next Select/Pen marker. The Codex built-in browser instead adds
+playable audio ranges after each pause and groups multiple pause segments under
+the same marker. The companion saves every audio segment for later transcription.
