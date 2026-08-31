@@ -55,6 +55,18 @@ test("Codex groups playable pause recordings by visual marker", async () => {
   assert.match(overlay, /语音 \$\{audioIndex \+ 1\}/);
 });
 
+test("deleting an adjustment discards its visual and live speech boundary", async () => {
+  const overlay = await readText("browser-extension/overlay.js");
+  assert.match(overlay, /function resetActiveSuggestionBoundary\(\)/);
+  assert.match(overlay, /previousRecognition\.onresult = null/);
+  assert.match(overlay, /previousRecognition\.abort\(\)/);
+  assert.match(overlay, /state\.audioBoundaryMs = recordingElapsed\(\)/);
+  assert.match(overlay, /state\.targets = state\.targets\.filter\(\(item\) => !deletedTargetIds\.has\(item\.id\)\)/);
+  assert.match(overlay, /state\.annotations = state\.annotations\.filter\(\(item\) => !deletedAnnotationIds\.has\(item\.id\)\)/);
+  assert.match(overlay, /state\.pendingTargetIds = state\.pendingTargetIds\.filter/);
+  assert.match(overlay, /if \(wasActiveSuggestion\) resetActiveSuggestionBoundary\(\)/);
+});
+
 test("Codex handoff is read-only and requires confirmation", async () => {
   const bridge = await readText("scripts/codex-thread-bridge.mjs");
   assert.match(bridge, /"-s", "read-only"/);

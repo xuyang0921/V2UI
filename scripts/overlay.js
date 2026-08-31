@@ -203,18 +203,39 @@
     return `关联 ${drawingCount} 处画笔`;
   }
 
+  function resetActiveSuggestionBoundary() {
+    state.activeSpeechSuggestionId = null; state.speechDraft = ""; state.speechInterim = ""; window.clearTimeout(state.speechTimer);
+    if (state.recordingStartedAt) state.audioBoundaryMs = recordingElapsed();
+    if (SURFACE !== "chrome" || !state.recordingStartedAt) return;
+    state.acceptSpeechResults = false; state.recognitionRestart = false; window.clearTimeout(state.recognitionRestartTimer);
+    const previousRecognition = state.recognition; state.recognition = null;
+    if (previousRecognition) {
+      previousRecognition.onresult = null; previousRecognition.onerror = null; previousRecognition.onend = null;
+      try { previousRecognition.abort(); } catch { try { previousRecognition.stop(); } catch {} }
+    }
+    state.recognitionRestartTimer = window.setTimeout(() => {
+      if (!state.recordingStartedAt) return;
+      state.acceptSpeechResults = true; startSpeechRecognition();
+    }, 180);
+  }
+
   function deleteSuggestion(suggestionId) {
     const suggestion = state.suggestions.find((item) => item.id === suggestionId); if (!suggestion) return;
+    const wasActiveSuggestion = state.activeSpeechSuggestionId === suggestionId;
+    const deletedTargetIds = new Set(suggestion.targetIds || []); const deletedAnnotationIds = new Set(suggestion.annotationIds || []);
     const removedRecordingIds = new Set(suggestion.recordingIds || []);
-    state.suggestions = state.suggestions.filter((item) => item.id !== suggestionId);
-    if (state.activeSpeechSuggestionId === suggestionId) state.activeSpeechSuggestionId = null;
-    const remainingTargetIds = new Set(state.suggestions.flatMap((item) => item.targetIds)); const remainingAnnotationIds = new Set(state.suggestions.flatMap((item) => item.annotationIds));
-    state.annotations = state.annotations.filter((item) => !suggestion.annotationIds.includes(item.id) || remainingAnnotationIds.has(item.id));
-    state.targets = state.targets.filter((item) => !suggestion.targetIds.includes(item.id) || remainingTargetIds.has(item.id) || state.pendingTargetIds.includes(item.id));
+    state.suggestions = state.suggestions.filter((item) => item.id !== suggestionId).map((item) => {
+      item.targetIds = item.targetIds.filter((targetId) => !deletedTargetIds.has(targetId)); item.annotationIds = item.annotationIds.filter((annotationId) => !deletedAnnotationIds.has(annotationId));
+      item.scope = item.targetIds.length || item.annotationIds.length ? "selection" : "page"; return item;
+    });
+    state.annotations = state.annotations.filter((item) => !deletedAnnotationIds.has(item.id));
+    state.targets = state.targets.filter((item) => !deletedTargetIds.has(item.id));
+    state.pendingTargetIds = state.pendingTargetIds.filter((targetId) => !deletedTargetIds.has(targetId)); state.pendingAnnotationIds = state.pendingAnnotationIds.filter((annotationId) => !deletedAnnotationIds.has(annotationId));
     if (!state.targets.some((item) => item.id === state.activeTargetId)) state.activeTargetId = null;
     state.history = state.history.filter((entry) => state.targets.some((item) => item.id === entry.id) || state.annotations.some((item) => item.id === entry.id));
     const remainingRecordingIds = new Set(state.suggestions.flatMap((item) => item.recordingIds || []));
     state.recordingSegments = state.recordingSegments.filter((segment) => { const keep = !removedRecordingIds.has(segment.id) || remainingRecordingIds.has(segment.id); if (!keep) revokeRecording(segment); return keep; });
+    if (wasActiveSuggestion) resetActiveSuggestionBoundary();
     state.highlightedSuggestionId = null; markDirty(); renderAll();
   }
 

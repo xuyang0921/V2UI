@@ -9,6 +9,7 @@
 - Task binding now probes Codex state and app-server availability, reports the concrete manual-delivery reason, and documents the sandbox permission required before companion startup.
 - Codex Desktop reviews now use a reliable save-and-return flow because the open task's active writer rejects external `codex exec resume` callbacks; a saved package is no longer reported as failed when optional delivery cannot start.
 - Chrome suggestions now render interim speech while recording and merge pauses until the next visual marker; Codex reviews now expose marker-linked playable audio after every pause and retain multiple pause segments in one adjustment item.
+- Deleting a suggestion now clears its text or audio, removes its Select/Pen evidence, and resets the active recognition boundary so late speech results cannot recreate deleted content.
 
 ## 0.4.0 - 2026-08-31
 
