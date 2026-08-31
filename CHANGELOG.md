@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Codex-browser overlays now use the localhost companion origin that served the runtime script, so non-default ports cannot route reviews into another local project.
+- Codex task delivery no longer passes the removed `-a` CLI option and continues to resume the bound task with a read-only sandbox.
+
 ## 0.4.0 - 2026-08-31
 
 ### Added

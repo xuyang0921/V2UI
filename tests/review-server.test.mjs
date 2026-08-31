@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { chmod, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { createServer } from "node:net";
 import { dirname, join, resolve } from "node:path";
 import { tmpdir } from "node:os";
@@ -65,4 +65,57 @@ test("review companion serves demo and saves a local structured package", async 
   const manifest = JSON.parse(await readFile(join(project, ".codex/v2ui-reviews/v2ui-smoke-0001/manifest.json"), "utf8"));
   assert.equal(manifest.schemaVersion, 3);
   assert.equal(manifest.suggestions[0].text, "缩小标题");
+});
+
+test("review companion invokes the Codex bridge with supported read-only arguments", async (context) => {
+  const project = await mkdtemp(join(tmpdir(), "v2ui-codex-bridge-"));
+  const port = await availablePort();
+  const origin = `http://127.0.0.1:${port}`;
+  const fakeCodex = join(project, "fake-codex.mjs");
+  const capturePath = join(project, "captured-args.json");
+  await writeFile(fakeCodex, `#!/usr/bin/env node\nimport { writeFileSync } from "node:fs";\nwriteFileSync(process.env.V2UI_TEST_CAPTURE, JSON.stringify(process.argv.slice(2)));\n`);
+  await chmod(fakeCodex, 0o755);
+  const child = spawn(process.execPath, [join(root, "scripts/review-server.mjs"), "--project", project, "--port", String(port)], {
+    stdio: "ignore",
+    env: {
+      ...process.env,
+      V2UI_CODEX_THREAD_ID: "thread-1",
+      V2UI_CODEX_COMMAND: fakeCodex,
+      V2UI_TEST_CAPTURE: capturePath,
+    },
+  });
+  context.after(async () => {
+    child.kill("SIGTERM");
+    await new Promise((resolveExit) => child.once("exit", resolveExit));
+    await rm(project, { recursive: true, force: true });
+  });
+
+  await waitForHealth(origin);
+  const response = await fetch(`${origin}/session`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      sessionId: "v2ui-bridge-0001",
+      product: "V2UI",
+      surface: "codex",
+      suggestions: [{ id: "suggestion-1", text: "缩小标题", scope: "page", targetIds: [], annotationIds: [] }],
+      annotations: [],
+      targets: [],
+      recordings: [],
+      transcription: { requiresPostProcessing: false },
+    }),
+  });
+  assert.equal(response.status, 201);
+  const saved = await response.json();
+  assert.equal(saved.codex.delivered, true);
+  const args = JSON.parse(await readFile(capturePath, "utf8"));
+  assert.deepEqual(args.slice(0, -1), [
+    "exec",
+    "-C", project,
+    "-s", "read-only",
+    "--skip-git-repo-check",
+    "resume",
+    "thread-1",
+  ]);
+  assert.equal(args.includes("-a"), false);
 });

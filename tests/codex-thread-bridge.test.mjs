@@ -14,6 +14,15 @@ test("recording-only reviews can be delivered for Codex transcription", () => {
   };
   const invocation = createCodexResumeInvocation({ projectRoot: "/tmp/project", threadId: "thread-1", manifest, manifestPath });
   assert.equal(invocation.command, "codex");
+  assert.deepEqual(invocation.args.slice(0, -1), [
+    "exec",
+    "-C", "/tmp/project",
+    "-s", "read-only",
+    "--skip-git-repo-check",
+    "resume",
+    "thread-1",
+  ]);
+  assert.equal(invocation.args.includes("-a"), false);
   assert.match(invocation.args.at(-1), /没有可用的实时转写文本/);
   assert.match(invocation.args.at(-1), /recording-01\.webm/);
   assert.match(invocation.args.at(-1), /不要根据标注猜测/);

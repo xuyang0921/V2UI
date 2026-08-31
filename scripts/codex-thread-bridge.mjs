@@ -49,7 +49,6 @@ export function createCodexResumeInvocation({ command = "codex", projectRoot, th
       "exec",
       "-C", projectRoot,
       "-s", "read-only",
-      "-a", "never",
       "--skip-git-repo-check",
       "resume",
       threadId,

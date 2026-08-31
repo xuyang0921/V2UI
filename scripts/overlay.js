@@ -4,8 +4,14 @@
     return;
   }
 
-  const SERVER_ORIGIN = "http://127.0.0.1:47831";
   const loaderScript = document.currentScript;
+  const SERVER_ORIGIN = (() => {
+    try {
+      const scriptUrl = new URL(loaderScript?.src || "");
+      if (scriptUrl.protocol === "http:" && ["127.0.0.1", "localhost"].includes(scriptUrl.hostname)) return scriptUrl.origin;
+    } catch {}
+    return "http://127.0.0.1:47831";
+  })();
   const SURFACE = loaderScript?.dataset?.v2uiSurface || (() => {
     try { return new URL(loaderScript?.src || location.href).searchParams.get("surface"); } catch { return null; }
   })() || "chrome";

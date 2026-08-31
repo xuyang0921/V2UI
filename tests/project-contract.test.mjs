@@ -18,6 +18,14 @@ test("both review surfaces share one overlay", async () => {
   assert.equal(await readText("browser-extension/overlay.js"), await readText("scripts/overlay.js"));
 });
 
+test("Codex overlays use the local companion origin that served the script", async () => {
+  const overlay = await readText("scripts/overlay.js");
+  assert.match(overlay, /new URL\(loaderScript\?\.src \|\| ""\)/);
+  assert.match(overlay, /\["127\.0\.0\.1", "localhost"\]\.includes\(scriptUrl\.hostname\)/);
+  assert.match(overlay, /return scriptUrl\.origin/);
+  assert.match(overlay, /return "http:\/\/127\.0\.0\.1:47831"/);
+});
+
 test("final visual and round boundaries are encoded", async () => {
   const overlay = await readText("browser-extension/overlay.js");
   for (const label of ["Browse", "Select", "Pen", "Undo", "Clear", "Exit review"]) assert.match(overlay, new RegExp(`>${label}<`));
