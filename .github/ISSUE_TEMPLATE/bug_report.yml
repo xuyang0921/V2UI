@@ -1,0 +1,23 @@
+name: Bug report
+description: Report a reproducible V2UI problem without private review data.
+body:
+  - type: input
+    id: version
+    attributes:
+      label: V2UI version
+    validations:
+      required: true
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Review surface
+      options: [Codex browser, Chrome]
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+      description: Do not attach recordings, manifests, tokens, or private source code.
+    validations:
+      required: true

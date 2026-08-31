@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "V2UI",
+  "version": "0.4.0",
+  "description": "在本地网页预览中圈选、绘制和可靠录音；实时转录不可用时由 Codex 接续处理。",
+  "permissions": ["activeTab", "scripting"],
+  "host_permissions": ["http://127.0.0.1/*", "http://localhost/*"],
+  "action": {
+    "default_title": "启动 V2UI",
+    "default_icon": {
+      "16": "assets/icon-16.png",
+      "32": "assets/icon-32.png",
+      "48": "assets/icon-48.png",
+      "128": "assets/icon-128.png"
+    }
+  },
+  "icons": {
+    "16": "assets/icon-16.png",
+    "32": "assets/icon-32.png",
+    "48": "assets/icon-48.png",
+    "128": "assets/icon-128.png"
+  },
+  "background": { "service_worker": "background.js" }
+}

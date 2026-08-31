@@ -1,0 +1,43 @@
+{
+  "name": "v2ui",
+  "version": "0.4.0",
+  "description": "Use V2UI to annotate a local web preview with resilient audio recording, live or deferred transcription, red drawing, and DOM-aware selections, then turn confirmed suggestions into verified code changes.",
+  "author": {
+    "name": "Yang Xu",
+    "url": "https://xuyang0921.github.io/V2UI/"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "V2UI",
+    "shortDescription": "Point, speak, and refine UI with Codex.",
+    "longDescription": "Review a local preview in the Codex sidebar or Chrome by selecting components, drawing, and speaking. V2UI preserves audio when live transcription is unavailable, saves linked evidence, returns the review to the bound Codex task for confirmation, then helps apply and verify approved changes.",
+    "developerName": "Yang Xu",
+    "category": "Engineering",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Start V2UI on my current local preview.",
+      "Start V2UI in the Codex sidebar browser.",
+      "Start V2UI in Chrome."
+    ],
+    "brandColor": "#E7A343",
+    "composerIcon": "./assets/composer-icon.png",
+    "logo": "./assets/logo.png",
+    "logoDark": "./assets/logo-dark.png",
+    "websiteURL": "https://xuyang0921.github.io/V2UI/",
+    "privacyPolicyURL": "https://xuyang0921.github.io/V2UI/privacy",
+    "termsOfServiceURL": "https://xuyang0921.github.io/V2UI/terms"
+  },
+  "homepage": "https://xuyang0921.github.io/V2UI/",
+  "repository": "https://github.com/xuyang0921/V2UI",
+  "license": "MIT",
+  "keywords": [
+    "ui-review",
+    "voice-feedback",
+    "chrome",
+    "codex"
+  ]
+}

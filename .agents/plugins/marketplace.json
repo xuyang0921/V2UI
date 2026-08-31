@@ -1,0 +1,22 @@
+{
+  "name": "v2ui-beta",
+  "plugins": [
+    {
+      "name": "v2ui",
+      "description": "Review Codex-generated local websites with linked voice, drawing, and DOM evidence.",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/xuyang0921/V2UI.git",
+        "ref": "v0.4.0"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Engineering"
+    }
+  ],
+  "interface": {
+    "displayName": "V2UI Beta"
+  }
+}

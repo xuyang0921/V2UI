@@ -1,0 +1,5 @@
+interface:
+  display_name: "V2UI"
+  short_description: "Point and speak changes on a live web preview"
+  brand_color: "#E7A343"
+  default_prompt: "Use $v2ui to review my current local preview."

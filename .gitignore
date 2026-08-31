@@ -1,0 +1,9 @@
+.DS_Store
+.codex/v2ui/
+.codex/v2ui-reviews/
+releases/
+node_modules/
+*.webm
+*.wav
+*.mp3
+*.log

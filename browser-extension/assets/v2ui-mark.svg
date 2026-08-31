@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 112" role="img" aria-label="V2UI">
+  <path fill="#D99031" d="M17 13c8-5 18-4 25 2l29 23 18-23c6-8 18-10 27-5 6 4 8 12 4 18L69 98c-3 4-8 6-13 6s-10-2-13-6L8 48C1 38 5 21 17 13Z"/>
+  <path fill="#4B443A" d="m22 26 19 11-19 12c-3 2-7 0-7-4V30c0-4 4-6 7-4Z"/>
+  <rect x="30" y="64" width="6" height="15" rx="3" fill="#4B443A"/><rect x="40" y="57" width="6" height="29" rx="3" fill="#4B443A"/><rect x="50" y="64" width="6" height="15" rx="3" fill="#4B443A"/>
+  <rect x="78" y="49" width="7" height="25" rx="3.5" transform="rotate(35 81.5 61.5)" fill="#4B443A"/><rect x="87" y="36" width="7" height="25" rx="3.5" transform="rotate(35 90.5 48.5)" fill="#4B443A"/>
+  <path fill="#F0C76A" d="m91 11 29 3c4 0 6 4 4 8l-9 24c-2 5-8 5-10 0l-5-14-19-1c-6 0-7-8-2-10l10-10c1 0 1 0 2 0Z"/>
+</svg>
