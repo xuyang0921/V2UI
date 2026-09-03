@@ -1,5 +1,7 @@
 # V2UI support
 
+<p align="right"><strong>English</strong> | <a href="./SUPPORT.zh-CN.md">中文</a></p>
+
 Use [GitHub Issues](https://github.com/xuyang0921/V2UI/issues) for reproducible product problems and documentation questions.
 
 Include:

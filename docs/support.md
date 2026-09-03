@@ -4,6 +4,8 @@ permalink: /support/
 ---
 # V2UI support
 
+<p align="right"><strong>English</strong> | <a href="../zh-CN/support/">中文</a></p>
+
 Use [GitHub Issues](https://github.com/xuyang0921/V2UI/issues) for reproducible product problems and documentation questions.
 
 Include the V2UI version, Chrome or Codex surface, operating system, browser and Node.js versions, reproduction steps, expected behavior, actual behavior, and sanitized error output.

@@ -1,5 +1,7 @@
 # Contributing to V2UI
 
+<p align="right"><strong>English</strong> | <a href="./CONTRIBUTING.zh-CN.md">中文</a></p>
+
 Thank you for helping improve V2UI. Contributions should strengthen the local preview review workflow without turning V2UI into a general-purpose editor or weakening its confirmation boundary.
 
 ## Before you start
@@ -35,7 +37,7 @@ Inspect all generated ZIP files with `unzip -t` and confirm the Chrome Web Store
 - Keep audio recording usable when live transcription fails.
 - Treat DOM targets as evidence, not source-edit authorization.
 - Require a scope summary and explicit approval before code changes.
-- Keep all product-facing copy in English.
+- Keep the shipped product UI and submission packages in English. Maintain English and Chinese parity for public repository documentation.
 - Update tests, `PRODUCT.md`, and `CHANGELOG.md` when behavior changes.
 
 ## Pull requests

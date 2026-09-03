@@ -1,5 +1,7 @@
 # V2UI Chrome extension
 
+<p align="right"><strong>English</strong> | <a href="./README.zh-CN.md">中文</a></p>
+
 This Manifest V3 extension is the external-Chrome review surface for V2UI. It injects the shared V2UI overlay only after the user clicks the browser action on a `localhost` or `127.0.0.1` page.
 
 ## Start the guided flow

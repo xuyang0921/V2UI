@@ -4,6 +4,8 @@ permalink: /
 ---
 # V2UI
 
+<p align="right"><strong>English</strong> | <a href="./zh-CN/">中文</a></p>
+
 V2UI is a local preview review layer for websites built with Codex. It links voice, red drawing, and DOM selections into structured feedback, then requires a source-impact summary and explicit approval before any code change.
 
 - [Privacy Policy](./privacy/)

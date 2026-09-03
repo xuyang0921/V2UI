@@ -73,12 +73,39 @@ test("Codex handoff is read-only and requires confirmation", async () => {
   assert.match(bridge, /Do not modify code until I approve the scope/);
 });
 
-test("source and distributable text remain English-only", async () => {
+test("shipped product and English documentation remain English-only", async () => {
   const files = [
     "README.md", "PRODUCT.md", "AGENTS.md", "RELEASING.md", "SECURITY.md", "CONTRIBUTING.md", "SUPPORT.md", "CODE_OF_CONDUCT.md",
     "browser-extension/README.md", "browser-extension/manifest.json", "browser-extension/overlay.js", "scripts/overlay.js", "scripts/review-server.mjs",
     "scripts/codex-thread-bridge.mjs", "scripts/package-chrome-extension.mjs", "skills/v2ui/SKILL.md", "docs/index.md", "docs/privacy.md", "docs/support.md", "docs/terms.md",
     "submission/chrome/listing.md", "submission/chrome/privacy-disclosures.md", "submission/chrome/test-instructions.md", "submission/openai/listing.md", "submission/openai/test-cases.md",
   ];
-  for (const file of files) assert.doesNotMatch(await readText(file), /[\u3400-\u9fff]/u, `${file} contains non-English product copy`);
+  for (const file of files) {
+    const content = (await readText(file)).replaceAll("中文", "");
+    assert.doesNotMatch(content, /[\u3400-\u9fff]/u, `${file} contains non-English product copy outside the language switch`);
+  }
+});
+
+test("public repository documentation provides an English and Chinese switch", async () => {
+  const pairs = [
+    ["README.md", "README.zh-CN.md"],
+    ["PRODUCT.md", "PRODUCT.zh-CN.md"],
+    ["CHANGELOG.md", "CHANGELOG.zh-CN.md"],
+    ["CONTRIBUTING.md", "CONTRIBUTING.zh-CN.md"],
+    ["CODE_OF_CONDUCT.md", "CODE_OF_CONDUCT.zh-CN.md"],
+    ["SECURITY.md", "SECURITY.zh-CN.md"],
+    ["SUPPORT.md", "SUPPORT.zh-CN.md"],
+    ["RELEASING.md", "RELEASING.zh-CN.md"],
+    ["browser-extension/README.md", "browser-extension/README.zh-CN.md"],
+    ["docs/index.md", "docs/zh-CN/index.md"],
+    ["docs/privacy.md", "docs/zh-CN/privacy.md"],
+    ["docs/support.md", "docs/zh-CN/support.md"],
+    ["docs/terms.md", "docs/zh-CN/terms.md"],
+  ];
+  for (const [englishFile, chineseFile] of pairs) {
+    const [english, chinese] = await Promise.all([readText(englishFile), readText(chineseFile)]);
+    assert.match(english, /English<\/strong>.*中文/s, `${englishFile} is missing the language switch`);
+    assert.match(chinese, /English.*中文<\/strong>/s, `${chineseFile} is missing the language switch`);
+    assert.match(chinese, /[\u3400-\u9fff]/u, `${chineseFile} does not contain Chinese documentation`);
+  }
 });

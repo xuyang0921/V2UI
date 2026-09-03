@@ -1,6 +1,12 @@
 # Changelog
 
+<p align="right"><strong>English</strong> | <a href="./CHANGELOG.zh-CN.md">中文</a></p>
+
 ## Unreleased
+
+### Changed
+
+- Added English and Chinese language switching for the repository README, product documentation, contribution guidance, policies, support pages, release guide, and public website.
 
 ## 0.4.1 - 2026-09-03
 

@@ -1,5 +1,7 @@
 # Security
 
+<p align="right"><strong>English</strong> | <a href="./SECURITY.zh-CN.md">中文</a></p>
+
 V2UI is intended only for local previews that the user owns or is authorized to review. Do not publish review recordings, manifests, tokens, private source code, or `.codex/` content in an issue.
 
 ## Supported versions

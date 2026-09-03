@@ -4,6 +4,8 @@ permalink: /privacy/
 ---
 # V2UI Privacy Policy
 
+<p align="right"><strong>English</strong> | <a href="../zh-CN/privacy/">中文</a></p>
+
 Effective date: September 3, 2026
 
 V2UI reviews local website previews that the user owns or is authorized to modify. The current architecture does not operate a V2UI cloud service that receives review data.

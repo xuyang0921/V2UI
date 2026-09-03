@@ -4,6 +4,8 @@ permalink: /terms/
 ---
 # V2UI Terms of Use
 
+<p align="right"><strong>English</strong> | <a href="../zh-CN/terms/">中文</a></p>
+
 Last updated: September 3, 2026
 
 V2UI is a local preview review tool for websites built with Codex. It is not a general-purpose web editor. You may use V2UI only with projects and preview environments that you own or are authorized to review.

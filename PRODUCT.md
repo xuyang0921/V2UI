@@ -1,5 +1,7 @@
 # V2UI product baseline
 
+<p align="right"><strong>English</strong> | <a href="./PRODUCT.zh-CN.md">中文</a></p>
+
 ## Positioning
 
 V2UI is a **preview review layer** for websites built with Codex. It preserves where the user was, what was visible, what they selected or drew, what they said, and when each event happened. Codex uses that evidence to resolve source scope, explain possible impact, wait for approval, implement the confirmed change, and verify the result.

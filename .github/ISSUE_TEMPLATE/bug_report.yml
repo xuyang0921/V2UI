@@ -1,23 +1,23 @@
-name: Bug report
-description: Report a reproducible V2UI problem without private review data.
+name: Bug report / 问题反馈
+description: Report a reproducible V2UI problem without private review data. / 反馈可复现的 V2UI 问题，请勿包含私有评审数据。
 body:
   - type: input
     id: version
     attributes:
-      label: V2UI version
+      label: V2UI version / V2UI 版本
     validations:
       required: true
   - type: dropdown
     id: surface
     attributes:
-      label: Review surface
-      options: [Codex browser, Chrome]
+      label: Review surface / 评审表面
+      options: [Codex browser / Codex 内置浏览器, Chrome]
     validations:
       required: true
   - type: textarea
     id: steps
     attributes:
-      label: Reproduction steps
-      description: Do not attach recordings, manifests, tokens, or private source code.
+      label: Reproduction steps / 复现步骤
+      description: Do not attach recordings, manifests, tokens, or private source code. / 请勿附加录音、manifest、令牌或私有源码。
     validations:
       required: true

@@ -1,5 +1,7 @@
 # Code of Conduct
 
+<p align="right"><strong>English</strong> | <a href="./CODE_OF_CONDUCT.zh-CN.md">中文</a></p>
+
 ## Our commitment
 
 V2UI contributors and maintainers commit to a respectful, harassment-free community for everyone, regardless of background, identity, experience, or ability.

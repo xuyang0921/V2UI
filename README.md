@@ -1,5 +1,7 @@
 # V2UI
 
+<p align="right"><strong>English</strong> | <a href="./README.zh-CN.md">中文</a></p>
+
 > Point at the interface. Say what should change. Keep the code under your control.
 
 V2UI is a local preview review layer for websites built with Codex. It keeps feedback connected to the running product: browse the real page, select a DOM element or draw directly on the preview, and describe the intended change by voice.
