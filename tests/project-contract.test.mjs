@@ -108,4 +108,5 @@ test("public repository documentation provides an English and Chinese switch", a
     assert.match(chinese, /English.*中文<\/strong>/s, `${chineseFile} is missing the language switch`);
     assert.match(chinese, /[\u3400-\u9fff]/u, `${chineseFile} does not contain Chinese documentation`);
   }
+  assert.match(await readText("docs/zh-CN/index.md"), /href="\.\.\/">English<\/a>/, "Chinese website home must return to the V2UI English root");
 });

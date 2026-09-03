@@ -4,7 +4,7 @@ permalink: /zh-CN/
 ---
 # V2UI
 
-<p align="right"><a href="../../">English</a> | <strong>中文</strong></p>
+<p align="right"><a href="../">English</a> | <strong>中文</strong></p>
 
 V2UI 是面向 Codex 生成网站的本地预览评审层。它把语音、红色画笔和 DOM 选择关联为结构化反馈，并要求在任何代码修改前先说明源码影响范围、取得明确批准。
 
