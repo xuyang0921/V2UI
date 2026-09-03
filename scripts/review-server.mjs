@@ -70,7 +70,7 @@ function setupPage(previewUrl) {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>设置 V2UI</title>
+    <title>Set up V2UI</title>
     <style>
       :root{color-scheme:light;--ink:#342d27;--muted:#766d64;--line:#eadfd2;--orange:#d98938;--orange-soft:#fff0d8;--yellow:#f6d678;--green:#4f8a68;--paper:#fffdf8}
       *{box-sizing:border-box}body{margin:0;min-height:100vh;background:linear-gradient(145deg,#fff9ef 0%,#fffdf9 54%,#f7f1ea 100%);color:var(--ink);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
@@ -86,13 +86,13 @@ function setupPage(previewUrl) {
   </head>
   <body>
     <main>
-      <header><div class="brand"><span class="mark">V</span>V2UI</div><h1>第一次设置，之后直接开始评审。</h1><p>扩展只作用于本地预览，companion 只把结构化建议和录制文件保存在当前项目。</p></header>
+      <header><div class="brand"><span class="mark">V</span>V2UI</div><h1>Set up once. Start reviewing next time.</h1><p>The extension runs only on local previews. The companion keeps structured suggestions and recordings in the current project.</p></header>
       <section class="steps">
-        ${extensionInstallUrl ? `<article class="step"><div class="number">1</div><div><h2>安装 Chrome 扩展</h2><p>从 Chrome Web Store 安装 V2UI，然后将它固定到工具栏。</p><div class="copy-row"><a class="copy" href="${escapeHtml(extensionInstallUrl)}" target="_blank" rel="noreferrer" style="display:inline-flex;align-items:center;text-decoration:none;height:40px">从 Chrome Web Store 安装</a></div><label class="confirm"><input id="extensionConfirmed" type="checkbox" />我已经在 Chrome 工具栏中看到 V2UI 图标</label></div></article>` : `<article class="step"><div class="number">1</div><div><h2>加载开发版 Chrome 扩展</h2><p>打开 <strong>chrome://extensions</strong>，开启开发者模式，选择“加载已解压的扩展程序”，然后使用下面的目录。</p><div class="copy-row"><code id="extensionPath">${extension}</code><button class="copy" data-copy="extensionPath">复制目录</button></div><label class="confirm"><input id="extensionConfirmed" type="checkbox" />我已经在 Chrome 工具栏中看到 V2UI 图标</label></div></article>`}
-        <article class="step done"><div class="number">✓</div><div><h2>本地 companion 已连接</h2><span class="status">运行于 127.0.0.1:${port}</span><p>后续启动会自动复用该服务，不需要再手动运行命令。</p></div></article>
-        <article class="step"><div class="number">3</div><div><h2>确认本地预览</h2><p>完成后会打开这个地址。点击 V2UI 图标，再按绿色播放按钮申请屏幕和麦克风权限。</p><input id="previewUrl" class="preview-input" value="${safePreview}" aria-label="本地预览地址" /></div></article>
+        ${extensionInstallUrl ? `<article class="step"><div class="number">1</div><div><h2>Install the Chrome extension</h2><p>Install V2UI from the Chrome Web Store, then pin it to the toolbar.</p><div class="copy-row"><a class="copy" href="${escapeHtml(extensionInstallUrl)}" target="_blank" rel="noreferrer" style="display:inline-flex;align-items:center;text-decoration:none;height:40px">Install from Chrome Web Store</a></div><label class="confirm"><input id="extensionConfirmed" type="checkbox" />I can see the V2UI icon in the Chrome toolbar</label></div></article>` : `<article class="step"><div class="number">1</div><div><h2>Load the Chrome development build</h2><p>Open <strong>chrome://extensions</strong>, enable Developer mode, choose <strong>Load unpacked</strong>, and select the directory below.</p><div class="copy-row"><code id="extensionPath">${extension}</code><button class="copy" data-copy="extensionPath">Copy path</button></div><label class="confirm"><input id="extensionConfirmed" type="checkbox" />I can see the V2UI icon in the Chrome toolbar</label></div></article>`}
+        <article class="step done"><div class="number">✓</div><div><h2>Local companion connected</h2><span class="status">Running on 127.0.0.1:${port}</span><p>Future launches reuse this service automatically; no extra command is required.</p></div></article>
+        <article class="step"><div class="number">3</div><div><h2>Confirm the local preview</h2><p>This address opens after setup. Click the V2UI icon, then use the green play control to request screen and microphone access.</p><input id="previewUrl" class="preview-input" value="${safePreview}" aria-label="Local preview URL" /></div></article>
       </section>
-      <div class="actions"><div class="privacy">权限只在开始评审后申请；录制由 V2UI 保存在本地。浏览器的实时语音识别可能按浏览器供应商政策处理音频。</div><button id="complete" class="primary" disabled>完成设置并打开预览</button></div><div id="hint" class="hint"></div>
+      <div class="actions"><div class="privacy">Permissions are requested only after a review starts. V2UI stores recordings locally; browser live speech recognition may process audio under the browser vendor's policy.</div><button id="complete" class="primary" disabled>Finish setup and open preview</button></div><div id="hint" class="hint"></div>
     </main>
     <script>
       const checkbox = document.querySelector('#extensionConfirmed');
@@ -102,15 +102,15 @@ function setupPage(previewUrl) {
       checkbox.addEventListener('change', () => { complete.disabled = !checkbox.checked; });
       document.querySelectorAll('[data-copy]').forEach((button) => button.addEventListener('click', async () => {
         const text = document.querySelector('#' + button.dataset.copy).textContent;
-        await navigator.clipboard.writeText(text); button.textContent = '已复制'; setTimeout(() => button.textContent = '复制目录', 1400);
+        await navigator.clipboard.writeText(text); button.textContent = 'Copied'; setTimeout(() => button.textContent = 'Copy path', 1400);
       }));
       complete.addEventListener('click', async () => {
-        hint.textContent = ''; complete.disabled = true; complete.textContent = '正在保存…';
+        hint.textContent = ''; complete.disabled = true; complete.textContent = 'Saving…';
         try {
           const response = await fetch('/onboarding/complete', { method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify({ extensionConfirmed:true, previewUrl:previewInput.value }) });
-          const result = await response.json(); if (!response.ok) throw new Error(result.error || '设置保存失败');
+          const result = await response.json(); if (!response.ok) throw new Error(result.error || 'Setup could not be saved');
           location.href = result.previewUrl;
-        } catch (error) { hint.textContent = error.message; complete.disabled = false; complete.textContent = '完成设置并打开预览'; }
+        } catch (error) { hint.textContent = error.message; complete.disabled = false; complete.textContent = 'Finish setup and open preview'; }
       });
     </script>
   </body>
@@ -183,8 +183,8 @@ const server = http.createServer(async (request, response) => {
     if (request.method === "POST" && requestUrl.pathname === "/onboarding/complete") {
       const input = await readJson(request);
       const previewUrl = localPreview(input.previewUrl);
-      if (input.extensionConfirmed !== true) throw new Error("请先确认 Chrome 扩展已经加载。");
-      if (!previewUrl) throw new Error("预览地址必须使用 localhost 或 127.0.0.1。");
+      if (input.extensionConfirmed !== true) throw new Error("Confirm that the Chrome extension is loaded first.");
+      if (!previewUrl) throw new Error("The preview URL must use localhost or 127.0.0.1.");
       const onboarding = { completed: true, completedAt: new Date().toISOString(), previewUrl };
       await writeFile(onboardingPath, `${JSON.stringify(onboarding, null, 2)}\n`, "utf8");
       return send(response, 200, { ok: true, ...onboarding });
@@ -208,12 +208,12 @@ const server = http.createServer(async (request, response) => {
   </head>
   <body>
     <main>
-      <h1>用圈选和语音，把网页改到满意为止。</h1>
-      <p>这是 V2UI 的安全演示页。圈选组件或使用红色画笔，再说出调整建议；结束录制后即可发送给 Codex。</p>
+      <h1>Point, speak, and refine the page.</h1>
+      <p>This is V2UI's safe local demo. Select a component or draw in red, describe the change, then save the finished review for Codex.</p>
       <section class="cards">
-        <article><h2>选择元素</h2><p>记录 DOM、位置与样式上下文。</p></article>
-        <article><h2>边看边说</h2><p>语音片段和标注共享时间轴。</p></article>
-        <article><h2>交给 Codex</h2><p>映射源码范围，修改并验证。</p></article>
+        <article><h2>Select elements</h2><p>Capture DOM, position, and style context.</p></article>
+        <article><h2>Speak in context</h2><p>Keep voice and annotations on one timeline.</p></article>
+        <article><h2>Confirm with Codex</h2><p>Resolve source scope before implementation.</p></article>
       </section>
     </main>
     ${demoReview ? "<script>window.__V2UI_DEMO_REVIEW__=true</script>" : ""}

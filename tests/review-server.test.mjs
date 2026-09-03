@@ -45,7 +45,7 @@ test("review companion serves demo and saves a local structured package", async 
   assert.equal(health.projectRoot, project);
   assert.match(await (await fetch(`${origin}/demo-review`)).text(), /__V2UI_DEMO_REVIEW__/);
   const setup = await (await fetch(`${origin}/setup`)).text();
-  assert.match(setup, /从 Chrome Web Store 安装/);
+  assert.match(setup, /Install from Chrome Web Store/);
   assert.equal(setup.includes("chrome://extensions"), false);
   const bindingResponse = await fetch(`${origin}/binding`, {
     method: "POST",
@@ -60,7 +60,7 @@ test("review companion serves demo and saves a local structured package", async 
     sessionId: "v2ui-smoke-0001",
     product: "V2UI",
     surface: "codex",
-    suggestions: [{ id: "suggestion-1", text: "缩小标题", scope: "page", targetIds: [], annotationIds: [] }],
+    suggestions: [{ id: "suggestion-1", text: "Reduce the heading size", scope: "page", targetIds: [], annotationIds: [] }],
     annotations: [],
     targets: [],
     recordings: [],
@@ -72,7 +72,7 @@ test("review companion serves demo and saves a local structured package", async 
   assert.equal(saved.codex.delivered, false);
   const manifest = JSON.parse(await readFile(join(project, ".codex/v2ui-reviews/v2ui-smoke-0001/manifest.json"), "utf8"));
   assert.equal(manifest.schemaVersion, 3);
-  assert.equal(manifest.suggestions[0].text, "缩小标题");
+  assert.equal(manifest.suggestions[0].text, "Reduce the heading size");
 });
 
 test("review companion invokes the Codex bridge with supported read-only arguments", async (context) => {
@@ -114,7 +114,7 @@ test("review companion invokes the Codex bridge with supported read-only argumen
       sessionId: "v2ui-bridge-0001",
       product: "V2UI",
       surface: "codex",
-      suggestions: [{ id: "suggestion-1", text: "缩小标题", scope: "page", targetIds: [], annotationIds: [] }],
+      suggestions: [{ id: "suggestion-1", text: "Reduce the heading size", scope: "page", targetIds: [], annotationIds: [] }],
       annotations: [],
       targets: [],
       recordings: [],

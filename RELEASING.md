@@ -1,10 +1,25 @@
-# V2UI 发布流程
+# V2UI release process
 
-1. 同步 `package.json`、`.codex-plugin/plugin.json`、Chrome manifest、Marketplace ref 和 CHANGELOG 版本。
-2. 运行 `npm run build`，检查四个 ZIP：开发者 Chrome、Web Store、完整 Codex、skills-only submission。
-3. 将源码推送到 `xuyang0921/V2UI`，创建同版本 tag 和 GitHub Release；启用 `docs/` GitHub Pages。
-4. Beta：将 Chrome Web Store ZIP 提交为 Unlisted；取得商店 URL 后，用 `--extension-install-url` 验证生产 onboarding。
-5. 提交 OpenAI public plugin portal：使用 skills-only ZIP、listing、8 个测试用例、隐私/条款/支持 URL。
-6. 公测稳定且法律文本确认后，分别将 Chrome visibility 与 OpenAI availability 调整为公开范围。
+## Prepare the release
 
-切勿发布 `releases/` 以外的临时产物，也不要把 `.codex/`、录音、安装缓存或无关产品源码加入 ZIP。
+1. Choose a semantic version and update `package.json`, `.codex-plugin/plugin.json`, `browser-extension/manifest.json`, the Marketplace tag in `.agents/plugins/marketplace.json`, submission listings, website copy, and `CHANGELOG.md`.
+2. Confirm that all product-facing copy is English and that `browser-extension/overlay.js` is identical to `scripts/overlay.js`.
+3. Run `npm run build`. It must complete project validation, all tests, and release packaging.
+4. Run `unzip -t` on all four ZIP files and inspect their contents. The Web Store archive must have `manifest.json` at its root; the developer archive must contain one versioned top-level directory.
+5. Confirm that no archive contains `.codex/`, recordings, logs, onboarding state, installation caches, parent-directory files, or unrelated product source.
+
+## Publish GitHub source and assets
+
+1. Commit and push the release source to `xuyang0921/V2UI`.
+2. Create an annotated `v<version>` tag at the release commit and push it.
+3. Create a GitHub Release named `V2UI <version>` with English release notes.
+4. Attach the developer Chrome ZIP, Chrome Web Store ZIP, complete Codex plugin ZIP, and skills-only OpenAI submission ZIP.
+5. Verify that the Marketplace manifest points to the newly published tag and that GitHub Pages renders the current privacy, terms, and support pages.
+
+## Submit distribution packages
+
+- **Chrome beta:** upload `V2UI-Chrome-Web-Store-<version>.zip` as Unlisted. After approval, pass the store URL to `start-v2ui.mjs` with `--extension-install-url` and retest onboarding.
+- **Codex beta:** install from the repository marketplace and verify the plugin card, version, artwork, default prompts, and `$v2ui` workflow.
+- **OpenAI directory:** use the skills-only ZIP, English listing, test cases, and public privacy, terms, and support URLs.
+
+Move visibility beyond beta only after the local-runtime compatibility, browser permission flow, policy text, and support process have been reviewed.

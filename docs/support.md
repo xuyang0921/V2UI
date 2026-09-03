@@ -2,8 +2,10 @@
 layout: default
 permalink: /support/
 ---
-# V2UI 支持
+# V2UI support
 
-发布仓库启用后，请通过 `https://github.com/xuyang0921/V2UI/issues` 提交问题，并附上 V2UI 版本、Chrome/Codex 表面、复现步骤及去敏后的错误信息。
+Use [GitHub Issues](https://github.com/xuyang0921/V2UI/issues) for reproducible product problems and documentation questions.
 
-不要上传录音、评审 manifest、访问令牌、项目私有源码或 `.codex/` 内容。安全问题请使用仓库的 Security advisory 私密渠道，不要创建公开 issue。
+Include the V2UI version, Chrome or Codex surface, operating system, browser and Node.js versions, reproduction steps, expected behavior, actual behavior, and sanitized error output.
+
+Do not upload recordings, review manifests, access tokens, private source code, or `.codex/` content. Report vulnerabilities privately through [GitHub Security Advisories](https://github.com/xuyang0921/V2UI/security/advisories/new).

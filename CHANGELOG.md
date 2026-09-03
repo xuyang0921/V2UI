@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+## 0.4.1 - 2026-09-03
+
+### Added
+
+- English product UI, onboarding, demo, website, policy pages, contributor documentation, store listings, and release instructions.
+- Contract coverage that prevents non-English product copy from returning to source or distributable text files.
+
+### Changed
+
+- Restructured the README around the running-product workflow, current capabilities, installation, safety boundaries, scope, roadmap, and contribution path.
+- Chrome speech recognition now follows the user's browser language with an English fallback.
+
 ### Fixed
 
 - Codex-browser overlays now use the localhost companion origin that served the runtime script, so non-default ports cannot route reviews into another local project.

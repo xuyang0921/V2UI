@@ -4,10 +4,11 @@ permalink: /
 ---
 # V2UI
 
-V2UI 是 Codex 生成网站的本地预览审阅层。它将语音、红色画笔和 DOM 选择整理成结构化建议，并在任何代码修改前要求用户确认影响范围。
+V2UI is a local preview review layer for websites built with Codex. It links voice, red drawing, and DOM selections into structured feedback, then requires a source-impact summary and explicit approval before any code change.
 
-- [隐私政策](./privacy/)
-- [使用条款](./terms/)
-- [支持与问题反馈](./support/)
+- [Privacy Policy](./privacy/)
+- [Terms of Use](./terms/)
+- [Support](./support/)
+- [Source and releases](https://github.com/xuyang0921/V2UI)
 
-当前公开测试版本：0.4.0。V2UI 仅支持 `localhost` 与 `127.0.0.1` 的本地预览。
+Current public beta: **0.4.1**. V2UI operates only on previews served from `localhost` or `127.0.0.1`.

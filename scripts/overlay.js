@@ -61,15 +61,15 @@
     <div class="v2-target-layer"></div>
     <div class="v2-page-highlight"></div>
     <div class="v2-toast" role="status" aria-live="polite"></div>
-    <aside class="v2-panel v2-surface" aria-label="调整建议">
-      <div class="v2-panel-head"><strong>调整建议</strong><span class="v2-status-dot" aria-label="已暂停"></span></div>
-      <div class="v2-list"><div class="v2-empty">开始审阅后，圈选页面元素或用画笔标记，再直接说出调整建议。</div></div>
-      <div class="v2-send-wrap"><button class="v2-send">发送建议</button></div>
+    <aside class="v2-panel v2-surface" aria-label="Review suggestions">
+      <div class="v2-panel-head"><strong>Review suggestions</strong><span class="v2-status-dot" aria-label="Paused"></span></div>
+      <div class="v2-list"><div class="v2-empty">Start a review, select an element or draw a mark, then describe the change.</div></div>
+      <div class="v2-send-wrap"><button class="v2-send">Save feedback</button></div>
     </aside>
     <div class="v2-toolbar v2-surface">
-      <button class="v2-drag" aria-label="拖动工具栏" title="拖动工具栏"><i></i><i></i><i></i><i></i><i></i><i></i></button>
+      <button class="v2-drag" aria-label="Move toolbar" title="Move toolbar"><i></i><i></i><i></i><i></i><i></i><i></i></button>
       <span class="v2-brand" aria-label="V2UI">V2UI</span>
-      <button class="v2-btn v2-record-toggle" aria-label="开始审阅" title="开始审阅"><svg class="v2-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.7c0-.78.86-1.25 1.52-.84l7.03 4.3a2.16 2.16 0 0 1 0 3.68l-7.03 4.3A.99.99 0 0 1 4 13.3V2.7Z"/></svg><svg class="v2-pause" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5h3v11H4zM9 2.5h3v11H9z"/></svg></button><span class="v2-time">00:00</span><span class="v2-divider"></span>
+      <button class="v2-btn v2-record-toggle" aria-label="Start review" title="Start review"><svg class="v2-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.7c0-.78.86-1.25 1.52-.84l7.03 4.3a2.16 2.16 0 0 1 0 3.68l-7.03 4.3A.99.99 0 0 1 4 13.3V2.7Z"/></svg><svg class="v2-pause" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5h3v11H4zM9 2.5h3v11H9z"/></svg></button><span class="v2-time">00:00</span><span class="v2-divider"></span>
       <button class="v2-btn active" data-tool="browse">Browse</button>
       <button class="v2-btn" data-tool="select">Select</button>
       <button class="v2-btn" data-tool="pen">Pen</button>
@@ -127,7 +127,7 @@
     showToast.timer = window.setTimeout(() => toast.classList.remove("show"), duration);
   }
 
-  const sendLabel = () => state.codexDeliveryConfigured ? "确认调整" : SURFACE === "codex" ? "保存并返回 Codex" : "发送建议";
+  const sendLabel = () => state.codexDeliveryConfigured ? "Send for confirmation" : SURFACE === "codex" ? "Save and return to Codex" : "Save feedback";
   function markDirty() { state.sent = false; sendButton.disabled = false; sendButton.textContent = sendLabel(); updateControls(); }
 
   function selectorFor(element) {
@@ -161,7 +161,7 @@
       computedStyle: { display: styles.display, position: styles.position, color: styles.color, backgroundColor: styles.backgroundColor, fontFamily: styles.fontFamily, fontSize: styles.fontSize, fontWeight: styles.fontWeight, lineHeight: styles.lineHeight, padding: styles.padding, margin: styles.margin, borderRadius: styles.borderRadius },
     };
     state.targets.push(target); state.activeTargetId = target.id; state.pendingTargetIds.push(target.id); state.history.push({ kind: "target", id: target.id });
-    markDirty(); renderAll(); showToast("已圈选，可以直接说出调整建议。", 2600);
+    markDirty(); renderAll(); showToast("Selection captured. Describe the change when ready.", 2600);
   }
 
   function suggestionVisuals(suggestion) { return { targets: new Set(suggestion?.targetIds || []), annotations: new Set(suggestion?.annotationIds || []) }; }
@@ -175,7 +175,7 @@
       const target = state.targets.find((item) => item.id === targetId); if (!target) return;
       const box = document.createElement("div"); box.className = `v2-target${highlighted ? " highlight" : ""}`;
       box.style.left = `${target.rect.x - window.scrollX}px`; box.style.top = `${target.rect.y - window.scrollY}px`; box.style.width = `${target.rect.width}px`; box.style.height = `${target.rect.height}px`;
-      const label = document.createElement("label"); label.textContent = highlighted ? "对应组件" : "已圈选"; box.appendChild(label); targetLayer.appendChild(box);
+      const label = document.createElement("label"); label.textContent = highlighted ? "Linked element" : "Selected"; box.appendChild(label); targetLayer.appendChild(box);
     });
     pageHighlight.classList.toggle("visible", Boolean(highlighted?.scope === "page"));
   }
@@ -196,11 +196,11 @@
   }
 
   function scopeLabel(suggestion) {
-    if (suggestion.scope === "page") return "整页建议";
+    if (suggestion.scope === "page") return "Page-level suggestion";
     const componentCount = suggestion.targetIds.length; const drawingCount = suggestion.annotationIds.length;
-    if (componentCount && drawingCount) return `关联 ${componentCount} 个组件 · ${drawingCount} 处画笔`;
-    if (componentCount) return `关联 ${componentCount} 个组件`;
-    return `关联 ${drawingCount} 处画笔`;
+    if (componentCount && drawingCount) return `${componentCount} element${componentCount === 1 ? "" : "s"} · ${drawingCount} drawing${drawingCount === 1 ? "" : "s"}`;
+    if (componentCount) return `${componentCount} linked element${componentCount === 1 ? "" : "s"}`;
+    return `${drawingCount} linked drawing${drawingCount === 1 ? "" : "s"}`;
   }
 
   function resetActiveSuggestionBoundary() {
@@ -241,15 +241,15 @@
 
   function renderList() {
     if (!state.suggestions.length) {
-      list.innerHTML = `<div class="v2-empty">${state.hasEnded && hasSavedRecording() ? "录音已保存。确认调整后，将交给 Codex 完成转写并结合标注整理建议。" : "开始审阅后，圈选页面元素或用画笔标记，再直接说出调整建议。"}</div>`;
+      list.innerHTML = `<div class="v2-empty">${state.hasEnded && hasSavedRecording() ? "Recording saved. Codex can transcribe it and align it with your visual evidence after confirmation." : "Start a review, select an element or draw a mark, then describe the change."}</div>`;
       return;
     }
     list.textContent = "";
     state.suggestions.forEach((suggestion, index) => {
       const item = document.createElement("div"); item.className = "v2-item"; item.dataset.suggestionId = suggestion.id;
-      item.innerHTML = `<span class="v2-index"></span><div class="v2-copy"></div><button class="v2-delete" aria-label="删除这条建议" title="删除"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 2l8 8M10 2L2 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>`;
+      item.innerHTML = `<span class="v2-index"></span><div class="v2-copy"></div><button class="v2-delete" aria-label="Delete this suggestion" title="Delete"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 2l8 8M10 2L2 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>`;
       item.querySelector(".v2-index").textContent = String(index + 1);
-      const copy = item.querySelector(".v2-copy"); copy.textContent = cleanSpeech(`${suggestion.text || ""} ${suggestion.interimText || ""}`) || "录音建议";
+      const copy = item.querySelector(".v2-copy"); copy.textContent = cleanSpeech(`${suggestion.text || ""} ${suggestion.interimText || ""}`) || "Recorded suggestion";
       const scope = document.createElement("span"); scope.className = "v2-scope"; scope.textContent = scopeLabel(suggestion); copy.appendChild(scope);
       const audioRanges = Array.isArray(suggestion.audioRanges) ? suggestion.audioRanges : [];
       if (audioRanges.length) {
@@ -257,7 +257,7 @@
         audioRanges.forEach((range, audioIndex) => {
           const segment = state.recordingSegments.find((candidate) => candidate.id === range.recordingId); if (!segment?.objectUrl) return;
           const row = document.createElement("div"); row.className = "v2-audio-row";
-          const label = document.createElement("span"); label.textContent = `语音 ${audioIndex + 1}`;
+          const label = document.createElement("span"); label.textContent = `Audio ${audioIndex + 1}`;
           const audio = document.createElement("audio"); audio.controls = true; audio.preload = "metadata"; audio.src = segment.objectUrl;
           const startSeconds = Math.max(0, Number(range.startMs || 0) / 1000); const endSeconds = Math.max(startSeconds, Number(range.endMs || segment.durationMs) / 1000);
           audio.addEventListener("loadedmetadata", () => { if (startSeconds > 0) audio.currentTime = startSeconds; }, { once: true });
@@ -279,11 +279,11 @@
     const recording = Boolean(state.recordingStartedAt);
     toolbar.classList.toggle("recording", recording);
     statusDot.classList.toggle("recording", recording);
-    statusDot.setAttribute("aria-label", recording ? "录制中" : "已暂停");
+    statusDot.setAttribute("aria-label", recording ? "Recording" : "Paused");
     panel.classList.toggle("visible", state.suggestions.length > 0 || (state.hasEnded && hasReviewEvidence()));
     recordToggle.disabled = state.starting || state.ending;
-    recordToggle.setAttribute("aria-label", recording ? "暂停审阅" : "开始审阅");
-    recordToggle.setAttribute("title", recording ? "暂停审阅" : "开始审阅");
+    recordToggle.setAttribute("aria-label", recording ? "Pause review" : "Start review");
+    recordToggle.setAttribute("title", recording ? "Pause review" : "Start review");
     undoButton.disabled = !state.history.length; clearButton.disabled = !state.history.length && !state.suggestions.length;
     sendWrap.classList.toggle("visible", !recording && state.hasEnded && hasReviewEvidence());
   }
@@ -291,7 +291,7 @@
   function renderAll() { renderTargets(); renderCanvas(); renderList(); updateControls(); }
 
   function showIntroToast() {
-    toast.innerHTML = '<span class="v2-toast-line">点击开始录制后，圈选页面元素或</span><span class="v2-toast-line">用画笔勾选，并直接说出调整建议。</span>';
+    toast.innerHTML = '<span class="v2-toast-line">Start recording, select an element or draw,</span><span class="v2-toast-line">then describe the change you want.</span>';
     toast.classList.add("intro", "show"); window.clearTimeout(showToast.timer);
     showToast.timer = window.setTimeout(() => { toast.classList.remove("show", "intro"); }, 2800);
   }
@@ -306,7 +306,7 @@
       state.codexDeliveryConfigured = Boolean(client.codexDelivery?.configured);
       sendButton.textContent = sendLabel();
     } catch {
-      showToast("V2UI 本地服务未启动。请回到 Codex 输入“启动 V2UI”。", 7600);
+      showToast('The V2UI local companion is not running. Return to Codex and ask to "Start V2UI."', 7600);
     }
   }
 
@@ -373,7 +373,7 @@
     const hasBoundaryEvidence = state.activeSpeechSuggestionId || state.pendingTargetIds.length || state.pendingAnnotationIds.length;
     if (!hasBoundaryEvidence && !force) { state.audioBoundaryMs = endMs; return; }
     const suggestion = ensureActiveSuggestion("recording"); suggestion.source = suggestion.source === "speech" ? "speech" : "recording";
-    if (!suggestion.text) suggestion.text = "录音建议";
+    if (!suggestion.text) suggestion.text = "Recorded suggestion";
     const startMs = Math.max(0, Math.round(state.audioBoundaryMs - state.currentRecordingStartedAtMs));
     const relativeEndMs = Math.max(startMs, Math.round(endMs - state.currentRecordingStartedAtMs));
     if (relativeEndMs > startMs) {
@@ -396,7 +396,7 @@
     window.clearTimeout(state.recognitionRestartTimer);
     if (notify && !state.fallbackToastShown) {
       state.fallbackToastShown = true;
-      showToast("实时转录暂不可用，录音仍会继续；确认调整后将由 Codex 完成转写。", 5200);
+      showToast("Live transcription is unavailable. Recording will continue so Codex can transcribe it later.", 5200);
     }
   }
 
@@ -412,7 +412,7 @@
       state.transcriptionStatus = "deferred";
       return false;
     }
-    const recognition = new Recognition(); recognition.lang = "zh-CN"; recognition.continuous = true; recognition.interimResults = true;
+    const recognition = new Recognition(); recognition.lang = navigator.language || "en-US"; recognition.continuous = true; recognition.interimResults = true;
     recognition.onresult = (event) => {
       if (!state.acceptSpeechResults) return;
       state.recognitionRetryCount = 0; state.transcriptionStatus = "live"; state.permissionStatus.speechRecognition = "active";
@@ -458,10 +458,10 @@
     state.currentRecordingId = id("recording"); state.currentRecordingStartedAtMs = state.recordedMs; state.audioBoundaryMs = state.recordedMs; state.acceptSpeechResults = true;
     state.recordingStartedAt = performance.now(); state.starting = false; state.timer = window.setInterval(() => { recordTime.textContent = new Date(recordingElapsed()).toISOString().slice(14, 19); }, 250);
     const liveTranscription = startSpeechRecognition(); updateControls();
-    if (liveTranscription) showToast("审阅已开始。圈选页面元素或使用红色画笔，再说出调整建议。", 4400);
-    else if (state.permissionStatus.audioRecording === "active") { state.fallbackToastShown = true; showToast(SURFACE === "codex" ? "审阅已开始并正在录音；暂停后语音会出现在建议面板中，可直接试听。" : "审阅已开始并正在录音；实时转录不可用，发送后将由 Codex 完成转写。", 5600); }
-    else if (tracks.length) showToast("审阅已开始，但未获得可用的麦克风音轨；屏幕和页面标注仍会保留。", 5200);
-    else showToast("未获得录屏或录音权限；仍可进行页面标注。", 4400);
+    if (liveTranscription) showToast("Review started. Select an element or draw in red, then describe the change.", 4400);
+    else if (state.permissionStatus.audioRecording === "active") { state.fallbackToastShown = true; showToast(SURFACE === "codex" ? "Review started and recording. Pause to add playable audio to the suggestion panel." : "Review started and recording. Live transcription is unavailable, so Codex can transcribe the saved audio later.", 5600); }
+    else if (tracks.length) showToast("Review started without a usable microphone track. Screen and page annotations will still be preserved.", 5200);
+    else showToast("Screen and microphone permissions were not granted. You can still annotate the page.", 4400);
   }
 
   async function stopRecorder() {
@@ -483,13 +483,13 @@
     }
     state.streams.forEach((stream) => stream.getTracks().forEach((track) => track.stop())); state.streams = []; state.mediaRecorder = null; state.mediaChunks = []; state.recordingStartedAt = null; state.ending = false; state.hasEnded = true;
     state.currentRecordingId = null; recordTime.textContent = new Date(state.recordedMs).toISOString().slice(14, 19); renderAll();
-    showToast(state.suggestions.length ? SURFACE === "codex" ? "录音已加入建议，可立即试听；继续录制会追加到当前标记，创建新标记会开启下一条。" : `录制已结束。可以继续开始，或${state.codexDeliveryConfigured ? "确认调整" : "发送现有建议"}。` : hasSavedRecording() ? `录音已保存。${state.codexDeliveryConfigured ? "确认调整" : "发送"}后将由 Codex 完成转写。` : "录制已结束，尚未识别到调整建议。", 5600);
+    showToast(state.suggestions.length ? SURFACE === "codex" ? "Audio added. Resume to append to this marker, or create a new marker for the next suggestion." : `Recording stopped. Resume or ${state.codexDeliveryConfigured ? "send for confirmation" : "save the current feedback"}.` : hasSavedRecording() ? `Recording saved. ${state.codexDeliveryConfigured ? "Send it for confirmation" : "Save it"} so Codex can transcribe it later.` : "Recording stopped. No suggestion was detected yet.", 5600);
   }
 
   function blobToBase64(blob) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result).split(",")[1] || ""); reader.onerror = reject; reader.readAsDataURL(blob); }); }
 
   async function sendReview() {
-    if (state.recordingStartedAt || !hasReviewEvidence()) return; sendButton.disabled = true; sendButton.textContent = "正在发送…";
+    if (state.recordingStartedAt || !hasReviewEvidence()) return; sendButton.disabled = true; sendButton.textContent = "Saving…";
     const recordings = await Promise.all(state.recordingSegments.map(async (segment, index) => ({ id: segment.id, index: index + 1, suggestionIds: state.suggestions.filter((suggestion) => (suggestion.recordingIds || []).includes(segment.id)).map((suggestion) => suggestion.id), startedAtMs: segment.startedAtMs, durationMs: segment.durationMs, mimeType: segment.mimeType, base64: await blobToBase64(segment.blob) })));
     const payload = {
       sessionId: state.sessionId, product: "V2UI", surface: SURFACE, createdAt: new Date().toISOString(), durationMs: Math.round(state.recordedMs),
@@ -500,12 +500,12 @@
     };
     try {
       const response = await fetch(`${SERVER_ORIGIN}/session`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) }); const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "发送失败");
+      if (!response.ok) throw new Error(result.error || "Save failed");
       if (!result.codex?.delivered) {
-        try { await navigator.clipboard.writeText("请读取当前项目最新的 V2UI 评审，先概括建议与可能影响范围并等待我确认；在我明确确认前不要修改代码。"); } catch {}
+        try { await navigator.clipboard.writeText("Read the latest V2UI review in the current project. Summarize the suggestions and possible source impact, then wait for my confirmation. Do not modify code until I explicitly approve it."); } catch {}
       }
-      resetRound(); showToast(result.codex?.delivered ? "修改建议已发到绑定的 Codex 对话，请回到对话中确认是否执行。" : "建议已保存。当前 Codex 不支持向正在打开的任务自动回调；请回到任务粘贴已复制的读取提示。", 9000);
-    } catch (error) { sendButton.disabled = false; sendButton.textContent = "重新发送"; showToast(`发送失败：${error.message}。请确认 V2UI 本地服务仍在运行。`, 9000); }
+      resetRound(); showToast(result.codex?.delivered ? "Feedback sent to the bound Codex task. Return there to confirm whether to apply it." : "Feedback saved. Return to the open Codex task and paste the copied review prompt.", 9000);
+    } catch (error) { sendButton.disabled = false; sendButton.textContent = "Try again"; showToast(`Save failed: ${error.message}. Confirm that the V2UI local companion is still running.`, 9000); }
   }
 
   function undoLast() {
@@ -578,9 +578,9 @@
       ] };
       state.annotations.push(annotation); state.pendingAnnotationIds.push(annotation.id); state.history.push({ kind: "annotation", id: annotation.id });
     }
-    addSuggestion("主标题再精炼一些，并缩短为两行以内。 ");
+    addSuggestion("Make the main heading more concise and keep it within two lines. ");
     setTool("browse");
-    addSuggestion("整体留白可以再舒展一点，保持清新、轻盈的感觉。 ");
+    addSuggestion("Give the layout more breathing room while keeping it light and fresh. ");
     state.hasEnded = true;
     renderAll();
   }

@@ -52,7 +52,7 @@ test("Codex groups playable pause recordings by visual marker", async () => {
   assert.match(overlay, /function closeAudioRange\(endMs, force = false\)/);
   assert.match(overlay, /suggestion\.audioRanges/);
   assert.match(overlay, /document\.createElement\("audio"\)/);
-  assert.match(overlay, /语音 \$\{audioIndex \+ 1\}/);
+  assert.match(overlay, /Audio \$\{audioIndex \+ 1\}/);
 });
 
 test("deleting an adjustment discards its visual and live speech boundary", async () => {
@@ -70,5 +70,15 @@ test("deleting an adjustment discards its visual and live speech boundary", asyn
 test("Codex handoff is read-only and requires confirmation", async () => {
   const bridge = await readText("scripts/codex-thread-bridge.mjs");
   assert.match(bridge, /"-s", "read-only"/);
-  assert.match(bridge, /明确确认前不要修改代码/);
+  assert.match(bridge, /Do not modify code until I approve the scope/);
+});
+
+test("source and distributable text remain English-only", async () => {
+  const files = [
+    "README.md", "PRODUCT.md", "AGENTS.md", "RELEASING.md", "SECURITY.md", "CONTRIBUTING.md", "SUPPORT.md", "CODE_OF_CONDUCT.md",
+    "browser-extension/README.md", "browser-extension/manifest.json", "browser-extension/overlay.js", "scripts/overlay.js", "scripts/review-server.mjs",
+    "scripts/codex-thread-bridge.mjs", "scripts/package-chrome-extension.mjs", "skills/v2ui/SKILL.md", "docs/index.md", "docs/privacy.md", "docs/support.md", "docs/terms.md",
+    "submission/chrome/listing.md", "submission/chrome/privacy-disclosures.md", "submission/chrome/test-instructions.md", "submission/openai/listing.md", "submission/openai/test-cases.md",
+  ];
+  for (const file of files) assert.doesNotMatch(await readText(file), /[\u3400-\u9fff]/u, `${file} contains non-English product copy`);
 });

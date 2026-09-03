@@ -1,28 +1,28 @@
 # V2UI development instructions
 
-本目录是独立 V2UI 产品根。不要引入其他产品的 `src/`、站点 worker、研究资料或发布脚本，也不要把个人插件目录或任何 `~/.codex/plugins/cache` 当成当前源码。
+This directory is the independent V2UI product root. Do not import another product's `src/`, website worker, research material, or release scripts. Never use a personal plugin directory or `~/.codex/plugins/cache` as source code.
 
-开始修改前阅读 `PRODUCT.md`。保留以下边界：
+Read `PRODUCT.md` before changing behavior. Preserve these boundaries:
 
-- V2UI 只审阅本地预览，不是通用网页编辑器。
-- 浏览与 Select/Pen 标注分离。
-- DOM 选择是证据，不自动授权更改共享组件、token、响应式规则或全局样式。
-- Codex Desktop 正在打开的任务有独占 writer，不能由外部 `codex exec resume` 回调。默认流程保存评审并引导用户回到任务读取；实验性 resume 也必须只读。发送建议不授权写代码，Codex 必须先总结影响范围并等待明确确认。
-- Chrome 保持 Manifest V3、`activeTab` 和 `scripting`，host 仅限 `localhost` 与 `127.0.0.1`。
-- 屏幕与麦克风权限只在用户开始评审后申请；实时转录失败不能阻断录音或提交。
-- Chrome 必须使用 interim/final Web Speech 结果实时显示建议；同一视觉标记下的停顿继续合并。Codex 不依赖实时转录，暂停后把录音段按视觉标记分组并提供试听。
-- 建议卡 `×` 必须整条撤销文字/录音与关联的 Select/Pen 证据，并切断活动语音识别或录音边界；重新表达必须创建新建议，禁止迟到的识别结果恢复已删内容。
-- 所有会话数据只能写入被审项目的 `.codex/v2ui-reviews`；onboarding 与运行日志写入被审项目的 `.codex/v2ui`。
+- V2UI reviews authorized local previews; it is not a general-purpose web editor.
+- Browse remains separate from Select/Pen annotation modes.
+- A DOM selection is evidence. It does not automatically authorize changes to a shared component, token, responsive rule, or global style.
+- Codex Desktop holds an exclusive writer for the open task, so an external `codex exec resume` cannot reliably inject a callback. Save the review and guide the user back to the task. Experimental resume must remain read-only. Saving suggestions does not authorize code changes; Codex must summarize impact and wait for explicit approval.
+- Chrome remains Manifest V3 with only `activeTab` and `scripting`; hosts remain limited to `localhost` and `127.0.0.1`.
+- Request screen and microphone access only after the user starts a review. A live-transcription failure must not block recording or submission.
+- Chrome must show interim and final Web Speech results while recording, merging pauses under the same visual marker. Codex must not depend on live transcription; after a pause it groups playable audio by visual marker.
+- A suggestion card's `×` discards its text/audio and linked Select/Pen evidence, then cuts the active recognition or audio boundary. New speech creates a new suggestion, and late results must not restore deleted content.
+- Store session data only under the reviewed project's `.codex/v2ui-reviews`; store onboarding state and runtime logs under that project's `.codex/v2ui`.
 
-Chrome 与 Codex 内置浏览器必须继续共用同一 overlay。修改 `browser-extension/overlay.js` 时同步更新 `scripts/overlay.js`，并让验证检查两者完全一致。
+Chrome and the Codex built-in browser must continue to share one overlay. After editing `browser-extension/overlay.js`, copy it exactly to `scripts/overlay.js` and verify byte-for-byte equality.
 
-视觉基线：低饱和暖橙/黄色、柔和红色画笔、不透明白色工具条和建议面板；工具条只用斜体橙色 `V2UI` 字标，图形 Logo 仅用于 Chrome 和 Codex 插件卡；工具标签固定为 Browse、Select、Pen、Undo、Clear、Exit review；播放/暂停控制为绿色；建议面板 header 只保留录制状态点；居中深棕圆角 Toast；面板在产生建议后出现且可拖动。
+Visual baseline: low-saturation warm orange/yellow, a soft red pen, opaque white toolbar and suggestion panel, italic orange `V2UI` wordmark without a graphic logo in the toolbar, graphic logos only for Chrome and Codex cards, Browse/Select/Pen/Undo/Clear/Exit review tools, a green play/pause control, a status-dot-only panel header, centered dark-brown rounded toasts, and a draggable panel that appears after the first suggestion.
 
-任何源代码修改后至少运行：
+After any source change, run at least:
 
 ```bash
 npm run validate
 npm test
 ```
 
-发布相关修改必须运行 `npm run build`，再检查 ZIP 完整性与 allowlist。不得把 `.codex/`、录音、日志、安装缓存或父目录内容打包。`scripts/package-chrome-extension.mjs` 是 Chrome 打包实现来源。
+For release changes, run `npm run build`, test every ZIP, and inspect the package allowlist. Never package `.codex/`, recordings, logs, installation caches, or parent-directory content. `scripts/package-chrome-extension.mjs` is the Chrome packaging source of truth.

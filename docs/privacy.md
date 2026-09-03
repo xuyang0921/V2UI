@@ -2,28 +2,32 @@
 layout: default
 permalink: /privacy/
 ---
-# V2UI 隐私政策
+# V2UI Privacy Policy
 
-生效日期：2026-08-31
+Effective date: September 3, 2026
 
-V2UI 用于审阅用户有权修改的本地网页预览。当前架构不运营接收评审数据的 V2UI 云服务。
+V2UI reviews local website previews that the user owns or is authorized to modify. The current architecture does not operate a V2UI cloud service that receives review data.
 
-## 收集和保存
+## Data requested and stored
 
-V2UI 在用户主动开始评审后才请求屏幕和麦克风权限。录音、DOM 目标、画笔轨迹、建议和结构化 manifest 保存在被审项目的 `.codex/v2ui-reviews/`。onboarding 状态及本地 companion 日志保存在 `.codex/v2ui/`。
+V2UI requests screen and microphone access only after the user starts a review. Recordings, DOM targets, pen paths, suggestions, and the structured manifest are stored under the reviewed project's `.codex/v2ui-reviews/` directory. Onboarding state and local companion logs are stored under `.codex/v2ui/` in that project.
 
-## 数据处理边界
+## Data processing boundaries
 
-V2UI companion 不会把屏幕或麦克风录制上传到 V2UI 运营方。浏览器提供的实时语音识别能力可能依据浏览器供应商的政策处理音频；实时识别失败时，V2UI 仍在本地录音并允许提交。用户把评审发送到绑定的 Codex 任务时，结构化建议及本地文件引用会交给该服务处理，适用相应服务提供方的条款和隐私政策。
+The V2UI companion does not upload screen or microphone recordings to the V2UI publisher. Live speech recognition provided by the browser may process audio under the browser vendor's policy. If live recognition fails, V2UI continues recording locally and allows the review to be saved.
 
-## 权限
+When a user chooses to hand a review to Codex, the structured suggestions and references to local evidence are processed under the applicable service provider's terms and privacy policy.
 
-Chrome 扩展使用 Manifest V3，仅申请 `activeTab` 与 `scripting`，站点权限仅限 `http://localhost/*` 和 `http://127.0.0.1/*`。权限用于在用户当前激活的本地预览页加载评审界面。
+## Chrome permissions
 
-## 删除与保留
+The Chrome extension uses Manifest V3 and requests only `activeTab` and `scripting`. Host access is limited to `http://localhost/*` and `http://127.0.0.1/*`. These permissions load the review interface into the local preview page the user explicitly activates.
 
-V2UI 不设置云端保留期。用户可删除被审项目中的 `.codex/v2ui-reviews/` 和 `.codex/v2ui/` 来移除本地评审数据与运行状态，也可随时移除 Chrome 扩展或 Codex 插件。
+## Retention and deletion
 
-## 联系
+V2UI does not set a cloud retention period because it does not operate review-data storage. Delete `.codex/v2ui-reviews/` and `.codex/v2ui/` from the reviewed project to remove local review data and runtime state. You may also remove the Chrome extension or Codex plugin at any time.
 
-公开支持渠道将在 GitHub 仓库启用后列于[支持页](../support/)。在该渠道上线前，本政策不得作为已开放公众支持的声明。
+Deleting a suggestion in the overlay removes its text or linked audio reference and its associated Select/Pen evidence from the review being prepared.
+
+## Contact
+
+For privacy questions, use the repository's [support process](../support/). Do not include recordings, manifests, private source, credentials, or other sensitive data in a public issue.

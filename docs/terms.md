@@ -2,12 +2,14 @@
 layout: default
 permalink: /terms/
 ---
-# V2UI 使用条款（发布前草案）
+# V2UI Terms of Use
 
-更新日期：2026-08-31
+Last updated: September 3, 2026
 
-V2UI 是面向 Codex 生成网站的本地预览审阅工具，不是通用网页编辑器。用户只能对自己拥有或已获授权的项目使用本产品。
+V2UI is a local preview review tool for websites built with Codex. It is not a general-purpose web editor. You may use V2UI only with projects and preview environments that you own or are authorized to review.
 
-V2UI 生成的选择、转录和源码范围判断可能不完整。发送建议不等于授权修改代码；任何修改都应先由 Codex 总结影响范围并由用户明确确认。用户应在合并或发布修改前检查代码、构建、可访问性和安全结果。
+V2UI selections, transcripts, recordings, and source-scope suggestions may be incomplete or inaccurate. Saving feedback does not authorize code changes. Codex must explain the possible impact and receive explicit confirmation before editing. You are responsible for reviewing source changes, builds, accessibility, security, and release results before merging or publishing them.
 
-本测试版本按现状提供，可能发生变化、中断或丢失本地数据。法律实体名称、适用法律、担保限制和责任上限必须在公开发布前由发布者确认或经法律审阅；在此之前本页仅供测试发布准备，不构成最终商业条款。
+The beta is provided "as is" and may change, be interrupted, or lose local data. To the maximum extent permitted by applicable law, the publisher disclaims warranties and is not liable for indirect, incidental, special, consequential, or punitive damages arising from beta use.
+
+These terms do not override the license terms that govern the V2UI source code or the separate terms and privacy policies of Chrome, Codex, browser speech services, or other third-party software.

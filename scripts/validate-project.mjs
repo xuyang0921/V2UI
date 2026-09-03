@@ -8,7 +8,7 @@ const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const readText = (path) => readFile(join(projectRoot, path), "utf8");
 const readJson = async (path) => JSON.parse(await readText(path));
 const fail = (message) => { throw new Error(message); };
-const requiredVersion = "0.4.0";
+const requiredVersion = "0.4.1";
 const [packageJson, plugin, manifest, marketplace, skill, skillUi, extensionOverlay, companionOverlay, packager, releasePackager] = await Promise.all([
   readJson("package.json"), readJson(".codex-plugin/plugin.json"), readJson("browser-extension/manifest.json"),
   readJson(".agents/plugins/marketplace.json"), readText("skills/v2ui/SKILL.md"), readText("skills/v2ui/agents/openai.yaml"),

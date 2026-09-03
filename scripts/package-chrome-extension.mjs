@@ -32,7 +32,7 @@ for (const name of runtimeAllowlist) {
   await cp(join(extensionRoot, name), join(storeRoot, name), { recursive: true });
 }
 await cp(join(extensionRoot, "README.md"), join(manualRoot, "README.md"));
-await writeFile(join(manualRoot, "INSTALL.md"), `# 安装 V2UI Chrome 扩展\n\n1. 解压 ${manualName}.zip。\n2. 在 Chrome 打开 \`chrome://extensions\`。\n3. 开启“开发者模式”。\n4. 点击“加载已解压的扩展程序”，选择解压后的 \`${manualName}\` 文件夹。\n5. 从 Codex 启动 V2UI companion，再在 localhost 或 127.0.0.1 预览页点击 V2UI 图标。\n\n版本：${manifest.version}\n`, "utf8");
+await writeFile(join(manualRoot, "INSTALL.md"), `# Install the V2UI Chrome extension\n\n1. Unzip ${manualName}.zip.\n2. Open \`chrome://extensions\` in Chrome.\n3. Enable Developer mode.\n4. Click Load unpacked and select the extracted \`${manualName}\` directory.\n5. Start the V2UI companion from Codex, open a localhost or 127.0.0.1 preview, and click the V2UI icon.\n\nVersion: ${manifest.version}\n`, "utf8");
 
 function zip(args, cwd) {
   const result = spawnSync("/usr/bin/zip", args, { cwd, encoding: "utf8" });

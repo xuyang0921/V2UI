@@ -11,31 +11,31 @@ function bridgeError(message, details = "") {
 }
 
 function formatSuggestion(item, index) {
-  const text = String(item?.text || "").trim() || "（无文字内容）";
-  const scope = item?.scope === "page" ? "整页" : item?.targetIds?.length ? "已关联页面元素" : "未指定范围";
-  return `${index + 1}. ${text}\n   范围：${scope}`;
+  const text = String(item?.text || "").trim() || "(No transcript available)";
+  const scope = item?.scope === "page" ? "Entire page" : item?.targetIds?.length ? "Linked page element" : "Unspecified";
+  return `${index + 1}. ${text}\n   Scope: ${scope}`;
 }
 
 export function buildCodexReviewMessage(manifest, manifestPath) {
   const suggestions = Array.isArray(manifest?.suggestions) ? manifest.suggestions : [];
-  const list = suggestions.length ? suggestions.map(formatSuggestion).join("\n") : "（本轮没有可用的实时转写文本）";
+  const list = suggestions.length ? suggestions.map(formatSuggestion).join("\n") : "(No live transcript is available for this review.)";
   const recordingPaths = (manifest?.files?.recordings || []).map((filename) => join(dirname(manifestPath), filename));
   const needsTranscription = Boolean(manifest?.transcription?.requiresPostProcessing && recordingPaths.length);
   const transcriptionInstructions = needsTranscription ? [
     "",
-    "内置浏览器的实时语音转录未完成，但录音已经保存。请先使用当前可用的音频/媒体工具转写以下录音，再按录音时间与 manifest 中的标注、圈选和滚动时间对齐：",
+    "Live transcription was not completed in the built-in browser, but the recordings were saved. Use the available audio or media tools to transcribe these files, then align the transcript with annotation, selection, and scroll timestamps in the manifest:",
     ...recordingPaths.map((path) => `- ${path}`),
-    "如果当前环境确实无法读取录音，请明确说明缺失的转写能力，不要根据标注猜测用户说了什么。",
+    "If this environment cannot read the recordings, state that limitation explicitly. Do not infer the user's words from visual annotations.",
   ] : [];
   const message = [
-    "我通过 V2UI 提交了这一轮调整建议：",
+    "I submitted this V2UI review:",
     "",
     list,
     ...transcriptionInstructions,
     "",
-    `结构化评审文件：${manifestPath}`,
+    `Structured review manifest: ${manifestPath}`,
     "",
-    "请读取该评审文件，概括上述建议，并说明每项可能影响的源码范围（实例、列表项、共享组件、设计 token、响应式规则或全局样式）。先让我确认是否执行；在我明确确认前不要修改代码。",
+    "Read the review manifest, summarize the suggestions above, and explain the possible source impact of each item: instance, list item, shared component, design token, responsive rule, or global style. Wait for my explicit confirmation before implementation. Do not modify code until I approve the scope.",
   ].join("\n");
   return message.slice(0, MAX_MESSAGE_CHARS);
 }

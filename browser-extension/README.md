@@ -1,36 +1,36 @@
-# V2UI browser helper
+# V2UI Chrome extension
 
-This Manifest V3 extension is the external-Chrome adapter for V2UI. The one-time setup
-page shows this directory and guides the user through loading it as an unpacked
-extension. Later launches skip setup, open the local preview, and reuse the
-project companion when it is already healthy.
+This Manifest V3 extension is the external-Chrome review surface for V2UI. It injects the shared V2UI overlay only after the user clicks the browser action on a `localhost` or `127.0.0.1` page.
 
-Start the guided flow from the project root:
+## Start the guided flow
+
+From the project you want to review, run:
 
 ```bash
-node <plugin-root>/scripts/start-v2ui.mjs --project "$PWD" --preview "http://127.0.0.1:5173/"
+node <plugin-root>/scripts/start-v2ui.mjs \
+  --project "$PWD" \
+  --preview "http://127.0.0.1:5173/" \
+  --mode chrome
 ```
 
-After setup, click the V2UI browser action on a `localhost` or `127.0.0.1`
-preview to toggle the review overlay.
+The first launch opens project-specific onboarding. A production configuration can direct the user to the Chrome Web Store; a development build shows the visible Load unpacked instructions. Later launches reuse the healthy local companion and open the preview directly.
 
-Codex Desktop keeps an exclusive writer for the open task, so an external
-`codex exec resume` cannot safely inject a callback into that same task. The
-sidebar action therefore becomes **保存并返回 Codex**: it saves the package and
-copies a prompt that asks the current task to read the latest review. Independent
-Chrome usage keeps **发送建议** and the same manual return-to-chat flow.
+## Review behavior
 
-The same overlay also runs in the Codex built-in sidebar browser through the
-development-server adapter in `../adapters/vite.mjs`; that mode does not use a
-Chrome extension.
+Click the V2UI extension icon to toggle the overlay. Browse remains non-intercepting; Select and Pen attach DOM or drawing evidence. Screen and microphone permissions are requested only after the user clicks the green start-review control.
 
-It intentionally requests only `activeTab`, `scripting`, and local-preview host
-access. Screen and microphone permissions are requested by the overlay only
-after the user clicks **开始录制**.
+Chrome renders interim and final Web Speech results in the active suggestion while recording. Brief pauses stay in the same item until another Select/Pen marker starts a new suggestion. If live transcription fails, local recording continues and the review remains saveable for later Codex transcription.
 
-Live speech transcription is used where the review surface supports it. Chrome
-renders interim and final
-results into the current suggestion while recording; pauses stay in the same
-item until the next Select/Pen marker. The Codex built-in browser instead adds
-playable audio ranges after each pause and groups multiple pause segments under
-the same marker. The companion saves every audio segment for later transcription.
+Clicking a suggestion's `×` removes that suggestion, its linked visual evidence, and the active speech boundary. New speech begins a clean suggestion.
+
+Codex Desktop keeps an exclusive writer for the open task, so V2UI saves the package and provides a return-to-task prompt instead of promising an external callback. Saving a review does not authorize code changes.
+
+## Permissions
+
+The extension intentionally requests only:
+
+- `activeTab`, to act on the local page the user explicitly selected;
+- `scripting`, to load the review overlay; and
+- host access to `http://localhost/*` and `http://127.0.0.1/*`.
+
+The same overlay runs in the Codex built-in browser through `../adapters/vite.mjs`; that surface does not use the Chrome extension.

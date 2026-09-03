@@ -1,88 +1,90 @@
 # V2UI product baseline
 
-## 定位
+## Positioning
 
-V2UI 是 Codex 生成网站的**预览审阅层**。它把“我在页面哪里、看到了什么、画了什么、说了什么、何时发生”保存为可追溯的本地证据，再由 Codex 映射到源码范围、等待确认、实施并验证。
+V2UI is a **preview review layer** for websites built with Codex. It preserves where the user was, what was visible, what they selected or drew, what they said, and when each event happened. Codex uses that evidence to resolve source scope, explain possible impact, wait for approval, implement the confirmed change, and verify the result.
 
-V2UI 不是通用网页编辑器，不直接把运行时 DOM 当成源码，也不在用户提交建议时自动修改代码。
+V2UI is not a general-purpose web editor. It does not treat the runtime DOM as source code and does not modify code when feedback is saved.
 
-## 核心循环
+## Core loop
 
-1. 启动本地预览与 V2UI companion。
-2. 在 Codex 内置浏览器或 Chrome 打开同一个预览审阅层。
-3. 用户主动开始评审并授予屏幕/麦克风权限。
-4. Browse 检查真实页面；Select 或 Pen 标记视觉对象，并同步说出建议。
-5. 暂停后保留全部证据；再次开始会追加录音段。
-6. 发送后 companion 把评审包保存到被审项目。
-7. companion 保存评审后，引导用户回到当前 Codex task 读取最新评审；Codex 总结实例、列表项、共享组件、设计 token、响应式规则或全局样式等可能影响范围。
-8. 用户明确确认后，Codex 才能修改、构建和验证。
-9. 发送完成即开启干净的新一轮，直到用户接受结果。
+1. Start the website's local preview and the V2UI companion.
+2. Open the same review layer in the Codex built-in browser or Chrome.
+3. The user starts a review and explicitly grants screen or microphone access.
+4. Browse the real page; use Select or Pen to identify visual evidence while speaking.
+5. Pause without losing evidence; resume to append another recording segment.
+6. Save the review package into the project being reviewed.
+7. Return to the current Codex task. Codex summarizes the suggestions and identifies possible instance, list-item, shared-component, design-token, responsive-rule, or global-style impact.
+8. Modify, build, and verify code only after the user explicitly confirms the scope.
+9. Start a clean review round after delivery and repeat until the result is accepted.
 
-## 两种表面，一个产品
+## Two surfaces, one product
 
-- **Codex 内置浏览器**：通过开发期 adapter 在 `?v2ui=1` 时注入共享 overlay。
-- **外部 Chrome**：通过 Manifest V3 扩展把同一 overlay 注入本地预览。
+- **Codex built-in browser:** a development-only adapter injects the shared overlay when the URL contains `?v2ui=1`.
+- **External Chrome:** a Manifest V3 extension injects the same overlay into an authorized local preview.
 
-两种表面共用 companion、交互、评审 schema、存储位置和确认规则；不得分叉为两套产品行为。用户可按每轮需要选择表面。
+Both surfaces share the companion, interaction model, review schema, storage location, and confirmation rule. They must not become separate products.
 
-## 证据与建议模型
+## Evidence and suggestion model
 
-- `manifest.json` 中的 DOM target、画笔 annotation、语音建议、时间戳、viewport、URL、滚动位置和权限状态是结构化事实来源。
-- 屏幕录制是辅助证据；DOM 选择只证明用户指向了运行时实例。
-- 一条 suggestion 是一条语音派生的调整请求，不等于 DOM target 数量。
-- 新建视觉标记会结束上一条建议的关联边界；同一次表述中的短暂停顿继续合并到当前建议。
-- 外部 Chrome 使用 Web Speech 的 interim 与 final 结果实时刷新当前建议；用户不需要暂停录制即可看到文字。停顿不会创建新建议，只有新的 Select/Pen 视觉标记才开启下一条。
-- Codex 内置浏览器不依赖实时转录。每次暂停都把新录音段加入建议面板并允许试听；同一视觉标记跨暂停的多段录音归入同一建议，分别显示播放器。新视觉标记才开启下一条录音建议。
-- Undo 撤销一个视觉动作，并移除只与它关联的建议；Clear 清空本轮。点击建议的 `×` 是整条撤销：同时删除文字或录音、该建议关联的全部 Select/Pen 视觉证据，并重置当前语音/录音关联边界；用户重新表达时创建全新建议，旧转录不得迟到回填，已删区域也不得自动恢复。
-- hovering 建议应高亮其关联组件、画笔或整页范围。
+- `manifest.json` is the structured source of truth for DOM targets, pen annotations, voice suggestions, timestamps, viewport, URL, scroll position, and permission state.
+- Screen recording is supporting evidence. A DOM selection proves only which runtime instance the user indicated.
+- One suggestion represents one voice-derived change request; it does not equal the number of DOM targets.
+- A new visual marker closes the previous suggestion boundary. Brief speech pauses continue in the current suggestion.
+- Chrome renders interim and final Web Speech results immediately while recording. Pauses do not create a new suggestion; a new Select/Pen marker does.
+- The Codex built-in browser does not depend on live transcription. Each pause adds a playable audio range to the current suggestion, and later pauses remain grouped under the same marker until a new visual marker is created.
+- Undo removes one visual action and any suggestion linked only to it. Clear removes the current round.
+- Clicking a suggestion's `×` is a complete discard: remove its text or linked audio, all associated Select/Pen evidence, and the active speech/audio boundary. New speech creates a new suggestion; late recognition results must not restore deleted content or regions.
+- Hovering a suggestion highlights its associated component, drawing, or page scope.
 
-## 状态与故障降级
+## State and graceful degradation
 
-评审有 recording、ended-and-editable、sent-for-confirmation 三种明确状态。结束录制与发送建议是两个动作。
+A review has three explicit states: recording, ended-and-editable, and sent-for-confirmation. Stopping a recording and saving feedback are separate actions.
 
-实时 Web Speech 是 best effort，音频录制是独立的必备路径。语音服务不可用、网络错误或嵌入浏览器不支持时：
+Live Web Speech is best effort. Local audio recording is the independent evidence path. If the speech service is unavailable, the network fails, or an embedded browser does not support live recognition, V2UI must:
 
-- 继续录音；
-- 继续保存 DOM 和画笔；
-- 允许录音-only 评审提交；
-- manifest 标记 `transcription.requiresPostProcessing`；
-- 绑定的 Codex task 先转写录音并与视觉时间线对齐，不能根据标注猜测语音内容。
+- continue recording;
+- preserve DOM and pen evidence;
+- allow an audio-only review to be saved;
+- set `transcription.requiresPostProcessing` in the manifest; and
+- instruct the bound Codex task to transcribe the referenced recordings and align them with the visual timeline instead of guessing from annotations.
 
-Chrome 与 Codex 共用 overlay 和评审 schema，但呈现必须按表面能力分流：Chrome 优先实时文字，Codex 优先暂停后的本地音频试听。不得因为 Codex 无实时转录而延迟 Chrome 的实时建议。
+Chrome and Codex share the overlay and schema but adapt presentation to surface capabilities: Chrome prioritizes live text; Codex prioritizes playable local audio after a pause. A Codex transcription limitation must never delay Chrome's live suggestions.
 
-屏幕、麦克风或语音权限分别记录。部分权限缺失不应丢弃其余可用证据。
+Screen, microphone, recording, and speech-recognition permissions are recorded separately. Missing one permission must not discard the remaining evidence.
 
-Codex Desktop 会为正在打开的 task 保持独占 writer；外部 `codex exec resume` 会以 `already has an active writer` 被拒绝。因此默认产品不得宣称能向当前 task 自动回调。companion 必须先保存评审，再提供“返回 Codex 读取最新评审”的可靠流程。实验性自动回传只能显式开启；任何回传失败都不得把已成功保存的评审显示成发送失败。
+Codex Desktop holds an exclusive writer for the open task. External `codex exec resume` calls can fail with `already has an active writer`, so the default product flow must not promise automatic callbacks. The companion saves first and provides a reliable return-to-Codex prompt. Experimental delivery must be explicitly enabled, remain read-only, and never present a successfully saved review as failed.
 
-## 授权与影响范围
+## Authorization and impact scope
 
-DOM 选择只是证据，不自动授权改共享组件、全局 token、响应式规则、循环中的所有实例或跨页面样式。Codex 必须在写代码前说明每项建议的潜在影响范围。
+A DOM selection is evidence, not authorization to change a shared component, global token, responsive rule, every loop instance, or cross-page styling. Codex must explain potential source impact before writing.
 
-“发送建议”或“保存并返回 Codex”只授权保存评审。实验性回传桥固定为只读；用户在 Codex task 中明确确认实施前，不得修改代码。
+**Save feedback**, **Send suggestions**, or **Save and return to Codex** authorizes only local review storage and handoff. No code may be changed until the user explicitly confirms the summarized scope.
 
-## 视觉与交互基线
+## Visual and interaction baseline
 
-- 低饱和暖橙/黄色体系，画笔为 alert-but-not-harsh 红色。
-- 工具条与建议面板是不透明白色表面，不使用模糊或半透明。
-- 工具条在拖动 grip 后显示纯斜体暖橙 `V2UI` 字标，不显示图形 Logo。
-- Chrome 扩展图标与 Codex 插件卡保留暖橙 V2UI 图形 Logo。
-- 工具固定为 Browse、Select、Pen、Undo、Clear、Exit review；Browse 与标注模式严格分离。
-- 单一 player control：可开始/继续时为绿色播放三角，录制中为绿色暂停图标，旁边显示累计时间。
-- 建议面板 header 只显示小状态点：录制中绿色，暂停/空闲红色。面板可从 header 拖动。
-- 建议面板在首条建议后出现；录音-only 降级场景可在结束后显示提交入口，以保证可交付性。
-- 首次提示与所有反馈均使用屏幕居中的深棕圆角 Toast；首次提示是两行等视觉宽度的短说明。
-- 发送成功后清空标记、建议、录音段和时长，直接进入新一轮。
+- Use a low-saturation warm orange/yellow palette and an alert-but-not-harsh red pen.
+- The toolbar and suggestion panel are opaque white surfaces without blur or transparency.
+- The toolbar shows an italic warm-orange `V2UI` wordmark, not the graphic logo.
+- Chrome extension and Codex plugin cards keep the warm-orange graphic mark.
+- Tools remain Browse, Select, Pen, Undo, Clear, and Exit review. Browse and annotation modes remain strictly separate.
+- One green player control shows play when ready and pause while recording, with accumulated time beside it.
+- The suggestion-panel header shows only a status dot: green while recording, red while paused or idle. The header drags the panel.
+- The suggestion panel appears after the first suggestion. An audio-only fallback may reveal the save action after recording ends.
+- First-use guidance and feedback use a centered, rounded dark-brown toast. Initial guidance uses two visually balanced lines.
+- A successful save clears annotations, suggestions, recording segments, and elapsed time before the next round.
 
-## 安全与存储
+## Security and storage
 
-- Chrome 使用 Manifest V3，只请求 `activeTab`、`scripting`。
-- host permissions 仅为 `http://localhost/*` 与 `http://127.0.0.1/*`。
-- 屏幕和麦克风只在用户点击开始评审后请求。
-- unpacked 扩展必须由用户在 Chrome UI 中可见地手动加载；不得宣称静默安装。
-- 每个被审项目拥有一次性 onboarding 状态；launcher 可安全重复启动或复用 companion。
-- 评审包只保存到 `<reviewed-project>/.codex/v2ui-reviews`。运行状态只保存到 `<reviewed-project>/.codex/v2ui`。
-- V2UI 源与发布包不得包含被审数据、onboarding 状态、录音、安装缓存或其他产品的 UI 源码。
+- Chrome uses Manifest V3 with only `activeTab` and `scripting`.
+- Host permissions are limited to `http://localhost/*` and `http://127.0.0.1/*`.
+- Screen and microphone access is requested only after the user starts a review.
+- An unpacked extension must be loaded visibly by the user in Chrome; V2UI never claims silent installation.
+- Each reviewed project owns its one-time onboarding state. The launcher can safely start or reuse the companion.
+- Review packages are stored only under `<reviewed-project>/.codex/v2ui-reviews`.
+- Runtime state and logs are stored only under `<reviewed-project>/.codex/v2ui`.
+- Source and release archives must exclude review data, onboarding state, recordings, logs, installation caches, and unrelated product source.
 
-## 0.3.1 基线
+## Release baseline
 
-0.3.1 包含：Chrome 与 Codex 双表面、共享 overlay、项目级 onboarding、`start-v2ui`、review-server companion、Vite adapter、只读 task 回传、录屏/麦克风/DOM/画笔/结构化 manifest、Web Speech 降级、分段录音、建议与视觉一一关联、短暂停顿合并，以及发送后的新一轮重置。
+Version 0.4.1 preserves the verified 0.3.1 dual-surface review foundation and the 0.4.0 distribution baseline. It includes project onboarding, `start-v2ui`, the review-server companion, the Vite adapter, read-only handoff, screen/microphone/DOM/pen evidence, resilient audio, live Chrome transcription, playable Codex audio, clean suggestion deletion, structured manifests, clean-round reset, English product UI, and English publication materials.

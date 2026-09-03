@@ -23,9 +23,9 @@ test("recording-only reviews can be delivered for Codex transcription", () => {
     "thread-1",
   ]);
   assert.equal(invocation.args.includes("-a"), false);
-  assert.match(invocation.args.at(-1), /没有可用的实时转写文本/);
+  assert.match(invocation.args.at(-1), /No live transcript is available/);
   assert.match(invocation.args.at(-1), /recording-01\.webm/);
-  assert.match(invocation.args.at(-1), /不要根据标注猜测/);
+  assert.match(invocation.args.at(-1), /Do not infer the user's words/);
 });
 
 test("empty reviews are still rejected", () => {
@@ -36,7 +36,7 @@ test("empty reviews are still rejected", () => {
 });
 
 test("live transcripts keep the normal suggestion handoff", () => {
-  const message = buildCodexReviewMessage({ suggestions: [{ text: "把标题缩小", scope: "page" }], files: { recordings: [] } }, manifestPath);
-  assert.match(message, /1\. 把标题缩小/);
-  assert.doesNotMatch(message, /实时语音转录未完成/);
+  const message = buildCodexReviewMessage({ suggestions: [{ text: "Reduce the heading size", scope: "page" }], files: { recordings: [] } }, manifestPath);
+  assert.match(message, /1\. Reduce the heading size/);
+  assert.doesNotMatch(message, /Live transcription was not completed/);
 });
